@@ -187,19 +187,24 @@ async function boot() {
   pollTimer = setInterval(atualizarLeve, 4000);
 }
 function renderLogin(msg, ok) {
-  const email = el('input', { type: 'email', id: 'lg-email', autocomplete: 'username', placeholder: 'seu@email.com' });
-  const senha = el('input', { type: 'password', id: 'lg-senha', autocomplete: 'current-password', placeholder: 'senha (mín. 8 caracteres)' });
+  const email = el('input', { type: 'text', id: 'lg-email', autocomplete: 'username', autocapitalize: 'none', spellcheck: 'false', placeholder: 'seu login' });
+  const senha = el('input', { type: 'password', id: 'lg-senha', autocomplete: 'current-password', placeholder: 'senha' });
   const aviso = el('div', { class: 'notice' + (ok ? ' ok' : ' bad'), hidden: !msg, text: msg || '' });
   const entrar = async () => {
     aviso.hidden = true;
-    const { error } = await sb.auth.signInWithPassword({ email: email.value.trim(), password: senha.value });
-    if (error) { aviso.className = 'notice bad'; aviso.textContent = error.message; aviso.hidden = false; }
+    const id = email.value.trim().toLowerCase();
+    const mail = id.includes('@') ? id : id + '@agenda.interno';
+    const { error } = await sb.auth.signInWithPassword({ email: mail, password: senha.value });
+    if (error) {
+      aviso.className = 'notice bad'; aviso.hidden = false;
+      aviso.textContent = /invalid login/i.test(error.message) ? 'Login ou senha incorretos.' : error.message;
+    }
   };
   senha.addEventListener('keydown', (e) => { if (e.key === 'Enter') entrar(); });
   app.replaceChildren(el('div', { class: 'login card' },
     el('h1', { text: 'Agenda WhatsApp' }),
-    el('p', { class: 'muted', text: 'Acesso restrito. Entre com o mesmo e-mail e senha do LiveControl.' }),
-    el('label', { class: 'f', for: 'lg-email', text: 'E-mail' }), email,
+    el('p', { class: 'muted', text: 'Acesso restrito.' }),
+    el('label', { class: 'f', for: 'lg-email', text: 'Login' }), email,
     el('label', { class: 'f', for: 'lg-senha', text: 'Senha' }), senha,
     aviso,
     el('div', { class: 'row', style: 'margin-top:14px' },
@@ -248,7 +253,8 @@ function render() {
   app.replaceChildren(
     el('header', { class: 'top' },
       el('h1', { text: 'Agenda WhatsApp' }), badge, el('span', { class: 'spacer' }),
-      el('span', { class: 'muted small', text: S.user.email }),
+      el('span', { class: 'muted small', text: (S.user.user_metadata && S.user.user_metadata.name) || S.user.email }),
+      el('button', { text: 'Alterar senha', onclick: dialogoSenha }),
       el('button', { text: 'Sair', onclick: () => sb.auth.signOut() })),
     el('main', {},
       el('nav', { class: 'tabs', role: 'tablist' }, abas.map(([id, nome]) =>
@@ -423,6 +429,33 @@ function dialogoMensagem(m) {
     el('div', { class: 'ft' },
       novo ? null : el('button', { type: 'button', class: 'danger', text: 'Excluir', onclick: apagar }),
       el('span', { class: 'grow' }),
+      el('button', { type: 'button', text: 'Cancelar', onclick: () => dlg.close() }),
+      el('button', { class: 'primary', type: 'submit', text: 'Salvar' }))));
+  dlg.showModal();
+}
+
+/* ---- Alterar senha ---- */
+function dialogoSenha() {
+  const a = el('input', { type: 'password', id: 'ns-a', autocomplete: 'new-password' });
+  const b = el('input', { type: 'password', id: 'ns-b', autocomplete: 'new-password' });
+  const msg = el('div', { class: 'notice bad', hidden: true });
+  const salvar = async (ev) => {
+    ev.preventDefault(); msg.hidden = true; msg.className = 'notice bad';
+    const erro = a.value.length < 10 ? 'Use pelo menos 10 caracteres.'
+      : /^\d+$/.test(a.value) ? 'Misture letras e números (só números é fácil de adivinhar).'
+      : a.value !== b.value ? 'As duas senhas não são iguais.' : null;
+    if (erro) { msg.textContent = erro; msg.hidden = false; return; }
+    const { error } = await sb.auth.updateUser({ password: a.value });
+    if (error) { msg.textContent = error.message; msg.hidden = false; return; }
+    msg.className = 'notice ok'; msg.textContent = 'Senha alterada.'; msg.hidden = false;
+    setTimeout(() => dlg.close(), 1200);
+  };
+  dlg.replaceChildren(el('form', { method: 'dialog', onsubmit: salvar },
+    el('div', { class: 'hd', text: 'Alterar senha' }),
+    el('div', { class: 'bd' },
+      el('label', { class: 'f', for: 'ns-a', text: 'Nova senha' }), a,
+      el('label', { class: 'f', for: 'ns-b', text: 'Repita a nova senha' }), b, msg),
+    el('div', { class: 'ft' },
       el('button', { type: 'button', text: 'Cancelar', onclick: () => dlg.close() }),
       el('button', { class: 'primary', type: 'submit', text: 'Salvar' }))));
   dlg.showModal();
