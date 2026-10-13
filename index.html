@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Agenda WhatsApp</title>
+<title>OnTime</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%235a2dbd'/%3E%3Cpath d='M9 17l5 5 9-12' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
   /* Layout: barra superior fixa, abas, lista de cartões e diálogos para edição. */
@@ -105,8 +105,8 @@
 <script>
 'use strict';
 /* ================= configuração (chaves públicas; a proteção é feita por RLS no banco) ================= */
-const SUPABASE_URL = 'https://eclvpqhbhnimqaswdyvy.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVjbHZwcWhiaG5pbXFhc3dkeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4NDE2MTgsImV4cCI6MjEwMTQxNzYxOH0.sRlo2xWnENB64HMGhP7ULuKPdMKLMFNwePa3knBh6uk';
+const SUPABASE_URL = 'https://cphfknoulocwebrduaci.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_nwagtec1zwwxs-zsf9mV5A_qCCaOkgU';
 const BUCKET = 'wpp-imagens';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -202,8 +202,8 @@ function renderLogin(msg, ok) {
   };
   senha.addEventListener('keydown', (e) => { if (e.key === 'Enter') entrar(); });
   app.replaceChildren(el('div', { class: 'login card' },
-    el('h1', { text: 'Agenda WhatsApp' }),
-    el('p', { class: 'muted', text: 'Acesso restrito.' }),
+    el('h1', { text: 'OnTime' }),
+    el('p', { class: 'muted', text: 'Agenda de mensagens do WhatsApp. Acesso restrito.' }),
     el('label', { class: 'f', for: 'lg-email', text: 'Login' }), email,
     el('label', { class: 'f', for: 'lg-senha', text: 'Senha' }), senha,
     aviso,
@@ -252,7 +252,7 @@ function render() {
   const abas = [['agenda', 'Agenda'], ['grupos', 'Grupos'], ['historico', 'Histórico'], ['conexao', 'Conexão']];
   app.replaceChildren(
     el('header', { class: 'top' },
-      el('h1', { text: 'Agenda WhatsApp' }), badge, el('span', { class: 'spacer' }),
+      el('h1', { text: 'OnTime' }), badge, el('span', { class: 'spacer' }),
       el('span', { class: 'muted small', text: (S.user.user_metadata && S.user.user_metadata.name) || S.user.email }),
       el('button', { text: 'Alterar senha', onclick: dialogoSenha }),
       el('button', { text: 'Sair', onclick: () => sb.auth.signOut() })),
