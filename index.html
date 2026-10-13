@@ -4,103 +4,308 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OnTime</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%235a2dbd'/%3E%3Cpath d='M9 17l5 5 9-12' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" href="icone.png">
+<meta name="theme-color" content="#078a5b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  /* Layout: barra superior fixa, abas, lista de cartões e diálogos para edição. */
+  /* OnTime: menu lateral, barra superior e telas de agendamento. Tema claro, verde da marca. */
   :root {
-    --bg: #f6f5fa; --panel: #ffffff; --ink: #1d1a2b; --muted: #6b6780; --line: #e3e0ee;
-    --accent: #5a2dbd; --accent-ink: #ffffff; --accent-soft: #eee8fb;
-    --ok: #17803d; --ok-soft: #e1f4e8; --warn: #9a5b00; --warn-soft: #fdf0d6;
-    --bad: #b3261e; --bad-soft: #fbe5e3;
-    --radius: 10px; --shadow: 0 1px 2px rgba(29,26,43,.06), 0 4px 14px rgba(29,26,43,.05);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #14121c; --panel: #1d1a2b; --ink: #ece9f7; --muted: #a29db8; --line: #322e45;
-      --accent: #a78bfa; --accent-ink: #14121c; --accent-soft: #2a2347;
-      --ok: #6ee7a0; --ok-soft: #12301f; --warn: #fbbf5c; --warn-soft: #34270d;
-      --bad: #ff8a80; --bad-soft: #3a1714; --shadow: none; color-scheme: dark;
-    }
-  }
-  :root[data-theme="dark"] {
-    --bg: #14121c; --panel: #1d1a2b; --ink: #ece9f7; --muted: #a29db8; --line: #322e45;
-    --accent: #a78bfa; --accent-ink: #14121c; --accent-soft: #2a2347;
-    --ok: #6ee7a0; --ok-soft: #12301f; --warn: #fbbf5c; --warn-soft: #34270d;
-    --bad: #ff8a80; --bad-soft: #3a1714; --shadow: none; color-scheme: dark;
+    --bg: #f5f8f6; --panel: #ffffff; --ink: #0e1b2c; --muted: #66758a; --line: #e3e9e6; --line2: #eff3f1;
+    --g: #078a5b; --gh: #06754d; --gd: #14452f; --gs: #e6f5ee; --gs2: #f3fbf7;
+    --ok: #0b7a4b; --oks: #e3f5ec; --warn: #99600a; --warns: #fdf3dc; --bad: #b3261e; --bads: #fdecea;
+    --info: #2557a7; --infos: #e8effb;
+    --r: 14px; --sh: 0 1px 2px rgba(14,27,44,.04), 0 8px 24px rgba(14,27,44,.04);
+    color-scheme: light;
   }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body { margin: 0; background: var(--bg); color: var(--ink);
-         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  body > header, main { padding-inline: 16px; }
-  header.top { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--line);
-               display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding-block: 10px; }
-  header.top h1 { font-size: 17px; margin: 0; letter-spacing: .01em; }
-  header.top .spacer { flex: 1; }
-  nav.tabs { display: flex; gap: 4px; overflow-x: auto; padding-block: 10px; }
-  nav.tabs button { border: 0; background: transparent; color: var(--muted); padding: 8px 14px; border-radius: 8px;
-                    font: inherit; cursor: pointer; white-space: nowrap; }
-  nav.tabs button[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-  main { max-width: 980px; margin: 0 auto; padding-block: 8px 48px; }
-  h2 { font-size: 16px; margin: 20px 0 10px; }
-  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  .grow { flex: 1; min-width: 0; }
+         font: 15px/1.5 Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3, p { margin: 0; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  a { color: var(--g); }
+  [hidden] { display: none !important; }
+  :focus-visible { outline: 2px solid var(--g); outline-offset: 2px; }
+  .ico { display: inline-flex; flex: none; }
+  .ico svg { display: block; }
   .muted { color: var(--muted); }
   .small { font-size: 13px; }
-  button, .btn { font: inherit; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
-                 padding: 7px 12px; border-radius: 8px; cursor: pointer; }
-  button:hover { border-color: var(--accent); }
-  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
-  button.danger { color: var(--bad); }
-  button:disabled { opacity: .55; cursor: default; }
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  input[type=text], input[type=email], input[type=password], input[type=date], input[type=tel], select, textarea {
-    width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line);
-    border-radius: 8px; padding: 8px 10px; }
-  textarea { min-height: 120px; resize: vertical; }
-  label.f { display: block; margin-block: 12px 4px; font-weight: 600; font-size: 13px; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
-          padding: 12px 14px; box-shadow: var(--shadow); }
-  .list { display: grid; gap: 10px; }
-  .item { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: start; }
-  .item h3 { font-size: 15px; margin: 0 0 4px; }
-  .item.off { opacity: .6; }
-  .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-  .badge { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
-  .badge.ok { background: var(--ok-soft); color: var(--ok); }
-  .badge.warn { background: var(--warn-soft); color: var(--warn); }
-  .badge.bad { background: var(--bad-soft); color: var(--bad); }
-  .actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
-  .next { font-variant-numeric: tabular-nums; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .grow { flex: 1; min-width: 0; }
+  .nowrap { white-space: nowrap; }
+  .trunc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  /* botões e campos */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--line);
+         background: #fff; color: var(--ink); padding: 10px 16px; border-radius: 12px; font-weight: 600; font-size: 14.5px;
+         line-height: 1.2; transition: background .15s, border-color .15s; text-decoration: none; }
+  .btn:hover { border-color: #c5d3cc; background: #fafcfb; }
+  .btn.primary { background: var(--g); border-color: var(--g); color: #fff; }
+  .btn.primary:hover { background: var(--gh); border-color: var(--gh); }
+  .btn.danger { color: var(--bad); }
+  .btn.sm { padding: 7px 12px; font-size: 13.5px; border-radius: 10px; }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .ibtn { width: 38px; height: 38px; border-radius: 10px; border: 1px solid transparent; background: transparent;
+          display: inline-flex; align-items: center; justify-content: center; color: var(--muted); flex: none; }
+  .ibtn:hover { background: var(--line2); color: var(--ink); }
+  .ibtn.danger:hover { background: var(--bads); color: var(--bad); }
+  .linkbtn { border: 0; background: transparent; color: var(--g); font-weight: 600; padding: 4px 0; display: inline-flex; gap: 6px; align-items: center; }
+  .linkbtn:hover { text-decoration: underline; }
+  .inp, .sel, .txt { width: 100%; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+                     outline: none; transition: border-color .15s, box-shadow .15s; }
+  .inp:focus, .sel:focus, .txt:focus { border-color: var(--g); box-shadow: 0 0 0 3px rgba(7,138,91,.13); }
+  .inp:disabled, .sel:disabled { background: var(--line2); color: var(--muted); }
+  .txt { min-height: 104px; resize: vertical; line-height: 1.5; }
+  .sel { appearance: none; padding-right: 40px;
+         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2366758a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+         background-repeat: no-repeat; background-position: right 12px center; background-size: 20px; }
+  .inpi { position: relative; }
+  .inpi > .ico { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+  .inpi .inp { padding-left: 46px; }
+  .inpi .reveal { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); }
+  .lbl { display: block; font-weight: 600; font-size: 13.5px; margin: 0 0 6px; }
+  .hint { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .field + .field { margin-top: 16px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .two > .field { margin-top: 0; }
+  .two > * { min-width: 0; }
+  input[type=radio], input[type=checkbox] { accent-color: var(--g); width: 18px; height: 18px; margin: 0; }
+  .switch { position: relative; width: 46px; height: 26px; border-radius: 999px; background: #cdd7d2; border: 0; padding: 0; flex: none; transition: background .15s; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff;
+                   transition: left .15s; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+  .switch[aria-checked=true] { background: var(--g); }
+  .switch[aria-checked=true]::after { left: 23px; }
+  .switch:disabled { opacity: .5; cursor: default; }
+
+  /* cartões e chips */
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--sh); }
+  .pad { padding: 22px 24px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 3px 10px;
+          border-radius: 999px; background: var(--line2); color: var(--muted); white-space: nowrap; }
+  .chip.ok { background: var(--oks); color: var(--ok); }
+  .chip.warn { background: var(--warns); color: var(--warn); }
+  .chip.bad { background: var(--bads); color: var(--bad); }
+  .chip.info { background: var(--infos); color: var(--info); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .notice { padding: 12px 14px; border-radius: 12px; background: var(--warns); color: var(--warn); font-size: 14px; }
+  .notice.bad { background: var(--bads); color: var(--bad); }
+  .notice.ok { background: var(--oks); color: var(--ok); }
+  .notice.info { background: var(--infos); color: var(--info); }
+  .avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--gs); color: var(--g); display: inline-flex;
+            align-items: center; justify-content: center; flex: none; font-weight: 700; }
+  .avatar.sm { width: 36px; height: 36px; font-size: 13px; }
+
+  /* login */
+  .auth { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 16px; gap: 22px; }
+  .auth-card { width: min(480px, 100%); padding: 40px 40px 30px; border-radius: 22px; }
+  .auth-logo { display: block; margin: 0 auto 26px; height: 54px; width: auto; }
+  .auth h1 { text-align: center; font-size: 26px; font-weight: 800; letter-spacing: -.01em; }
+  .auth .sub { text-align: center; color: var(--muted); margin: 6px 0 26px; }
+  .auth .opts { display: flex; justify-content: space-between; align-items: center; margin: 16px 0 20px; gap: 12px; flex-wrap: wrap; }
+  .auth .opts label { display: inline-flex; gap: 9px; align-items: center; color: var(--muted); }
+  .auth .btn.primary { width: 100%; padding: 14px; font-size: 16px; }
+  .auth .sep { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 13px; margin-top: 22px; }
+  .auth .sep::before, .auth .sep::after { content: ""; height: 1px; background: var(--line); flex: 1; }
+  .boot { display: grid; place-items: center; min-height: 60vh; color: var(--muted); }
+
+  /* estrutura */
+  .shell { display: grid; grid-template-columns: 264px minmax(0, 1fr); min-height: 100vh; }
+  .sidebar { background: #fff; border-right: 1px solid var(--line); display: flex; flex-direction: column; padding: 22px 16px 18px;
+             position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .sidebar .logo { display: block; padding: 0 8px; }
+  .sidebar .logo img { height: 38px; width: auto; display: block; }
+  .nav { display: flex; flex-direction: column; gap: 6px; margin-top: 32px; }
+  .nav a, .nav button { display: flex; gap: 14px; align-items: center; padding: 12px 14px; border-radius: 12px; color: var(--ink);
+                        text-decoration: none; font-weight: 500; border: 0; background: transparent; width: 100%; text-align: left; }
+  .nav a:hover, .nav button:hover { background: var(--line2); }
+  .nav a[aria-current=page] { background: var(--gs); color: var(--g); font-weight: 600; }
+  .sidebar .bottom { margin-top: auto; padding-top: 18px; display: flex; flex-direction: column; gap: 10px; }
+  .demo { display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 12px; border: 0; width: 100%; text-align: left;
+          background: var(--gs); color: var(--g); font-weight: 600; }
+  .demo[aria-pressed=true] { background: var(--g); color: #fff; }
+  .ws { display: flex; gap: 12px; align-items: center; padding: 12px 6px 4px; border: 0; border-top: 1px solid var(--line); background: transparent; width: 100%; text-align: left; margin-top: 6px; }
+  .ws strong { font-weight: 600; }
+  .main { min-width: 0; display: flex; flex-direction: column; }
+  .topbar { height: 72px; display: flex; align-items: center; gap: 14px; padding: 0 32px; border-bottom: 1px solid var(--line);
+            background: rgba(245,248,246,.85); backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 20; }
+  .crumbs { display: flex; gap: 10px; align-items: center; color: var(--muted); min-width: 0; flex-wrap: nowrap; overflow: hidden; }
+  .crumbs a { color: inherit; text-decoration: none; white-space: nowrap; }
+  .crumbs a:hover { color: var(--ink); }
+  .crumbs .atual { color: var(--ink); white-space: nowrap; }
+  .crumbs .sepc { color: #b6c1bb; }
+  .topbar .sp { flex: 1; }
+  .bell { position: relative; }
+  .bell .badge { position: absolute; top: 4px; right: 4px; min-width: 18px; height: 18px; border-radius: 999px; background: var(--bad); color: #fff;
+                 font-size: 11px; font-weight: 700; display: grid; place-items: center; padding: 0 4px; }
+  .who { display: flex; align-items: center; gap: 8px; border: 0; background: transparent; padding: 4px 6px; border-radius: 12px; }
+  .who:hover { background: var(--line2); }
+  .hamb { display: none; }
+  .content { padding: 28px 32px 64px; width: 100%; max-width: 1320px; }
+  .demo-banner { background: var(--gd); color: #fff; text-align: center; padding: 8px 12px; font-size: 14px; }
+  .scrim { display: none; }
+  .page-h { margin-bottom: 22px; }
+  .page-h h1 { font-size: 32px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+  .page-h .sub { color: var(--muted); font-size: 17px; margin-top: 4px; }
+  .page-h .acts { display: flex; gap: 10px; flex-wrap: wrap; }
+  .back { display: inline-flex; gap: 8px; align-items: center; color: var(--g); font-weight: 600; text-decoration: none; margin-bottom: 8px; border: 0; background: transparent; padding: 0; }
+
+  /* lista de agendamentos */
+  .tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+  .tabs button { border: 0; background: transparent; padding: 10px 14px; color: var(--muted); font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tabs button[aria-selected=true] { color: var(--g); border-bottom-color: var(--g); }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+  .pill { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 14px; font-weight: 600; color: var(--muted); font-size: 14px; }
+  .pill[aria-pressed=true] { background: var(--gs); color: var(--g); border-color: #bfe3d1; }
+  .search { position: relative; flex: 1 1 240px; max-width: 360px; }
+  .search .inp { padding-left: 42px; padding-block: 10px; }
+  .search > .ico { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+  .lista { overflow: hidden; }
+  .linha { display: grid; grid-template-columns: 44px minmax(0, 1.5fr) minmax(0, 1.2fr) auto auto; gap: 8px 16px; align-items: center;
+           padding: 14px 20px; border-top: 1px solid var(--line2); }
+  .linha:first-child { border-top: 0; }
+  .linha.off .titulo { color: var(--muted); }
+  .linha .titulo { font-weight: 600; }
+  .linha .acoes { display: flex; gap: 2px; align-items: center; justify-content: flex-end; }
+  .tipoic { width: 44px; height: 44px; border-radius: 12px; background: var(--gs); color: var(--g); display: grid; place-items: center; }
+  .tipoic.poll { background: var(--infos); color: var(--info); }
+  .tipoic.act { background: var(--warns); color: var(--warn); }
+  .vazio { text-align: center; padding: 52px 24px; }
+  .vazio .tipoic { margin: 0 auto 14px; width: 56px; height: 56px; }
+  .vazio h3 { font-size: 18px; margin-bottom: 4px; }
+
+  /* formulário Nova mensagem */
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 24px; align-items: start; }
+  .sec-t { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+  .sec + .sec { margin-top: 26px; }
+  .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--line); border-radius: 12px; padding: 4px; gap: 4px; background: #fff; }
+  .seg button { border: 0; background: transparent; border-radius: 9px; padding: 10px 12px; display: inline-flex; gap: 8px; justify-content: center;
+                align-items: center; color: var(--muted); font-weight: 500; }
+  .seg button[aria-pressed=true] { background: var(--gs); color: var(--g); font-weight: 600; }
+  .dest { display: flex; align-items: center; gap: 12px; width: 100%; border: 1px solid var(--line); background: #fff; border-radius: 12px; padding: 10px 14px; text-align: left; }
+  .dest:hover { border-color: #c5d3cc; }
+  .dest + .dest, .dest-wrap + .dest-wrap { margin-top: 8px; }
+  .dest .tx { flex: 1; min-width: 0; }
+  .dest .t { font-weight: 600; display: block; }
+  .dest .s { color: var(--muted); font-size: 13.5px; display: block; }
+  .dest-wrap { display: flex; gap: 6px; align-items: center; }
+  .dest-wrap .dest { flex: 1; min-width: 0; }
+  .vary + .vary { margin-top: 12px; }
+  .vary .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .count { font-size: 12.5px; color: var(--muted); }
+  .count.bad { color: var(--bad); font-weight: 600; }
+  .anexo { display: flex; gap: 12px; align-items: center; border: 1px dashed #c5d3cc; border-radius: 12px; padding: 8px 12px; margin-top: 8px; background: var(--gs2); }
+  .anexo img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: var(--line); }
+  .days { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .days button { border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 8px 12px; font-weight: 600; color: var(--muted); }
+  .days button[aria-pressed=true] { background: var(--gs); color: var(--g); border-color: #bfe3d1; }
+  .times { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .radios { display: flex; gap: 14px 20px; flex-wrap: wrap; align-items: center; }
+  .radios label { display: inline-flex; gap: 8px; align-items: center; }
+  .form-ft { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; border-top: 1px solid var(--line2); margin-top: 26px; padding-top: 18px; }
+  .side { display: flex; flex-direction: column; gap: 18px; position: sticky; top: 92px; }
+  .side h3 { font-size: 18px; font-weight: 700; }
+  .wa { background: #efeae2; border-radius: 12px; padding: 14px; min-height: 120px; margin-top: 14px; }
+  .wa-head { display: flex; gap: 12px; align-items: center; background: #f7f7f5; border: 1px solid var(--line); border-radius: 12px 12px 0 0; padding: 10px 14px; margin-top: 14px; }
+  .wa-head + .wa { margin-top: 0; border-radius: 0 0 12px 12px; }
+  .bubble { background: #d9fdd3; border-radius: 10px 10px 2px 10px; padding: 8px 10px 6px; margin-left: auto; max-width: 92%; width: fit-content;
+            box-shadow: 0 1px 1px rgba(0,0,0,.08); }
+  .bubble img { display: block; max-width: 100%; border-radius: 8px; margin-bottom: 6px; }
+  .bubble .msg { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .bubble .hora { text-align: right; font-size: 11.5px; color: #667781; margin-top: 2px; }
+  .bubble .poll-o { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid rgba(0,0,0,.07); }
+  .bubble .poll-o i { width: 16px; height: 16px; border: 2px solid #8696a0; border-radius: 50%; display: inline-block; flex: none; }
+  .resumo dl { margin: 12px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 10px 20px; }
+  .resumo dt { color: var(--muted); }
+  .resumo dd { margin: 0; text-align: right; font-weight: 500; }
+  .resumo { background: var(--gs2); border-color: #cfe9dc; }
+
+  /* contatos, modelos, configurações, visão geral */
+  .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 22px; }
+  .kpi { padding: 18px 20px; }
+  .kpi .top { display: flex; gap: 10px; align-items: center; color: var(--muted); font-weight: 600; font-size: 14px; }
+  .kpi .val { font-size: 26px; font-weight: 800; margin-top: 8px; letter-spacing: -.01em; }
+  .kpi .sub { color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .item { display: flex; gap: 14px; align-items: center; padding: 12px 20px; border-top: 1px solid var(--line2); }
+  .item:first-child { border-top: 0; }
+  .item .tx { flex: 1; min-width: 0; }
+  .card-h { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px 10px; }
+  .card-h h2 { font-size: 17px; font-weight: 700; }
+  .setrow { display: flex; gap: 16px; align-items: center; justify-content: space-between; padding: 16px 0; border-top: 1px solid var(--line2); flex-wrap: wrap; }
+  .setrow:first-child { border-top: 0; }
+  .qr { background: #fff; padding: 12px; border: 1px solid var(--line); border-radius: 14px; display: inline-block; max-width: 100%; }
+  .qr svg { width: min(280px, 100%); height: auto; display: block; }
+  .tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .tbl th, .tbl td { text-align: left; padding: 11px 16px; border-top: 1px solid var(--line2); vertical-align: top; }
+  .tbl th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); border-top: 0; }
   .scroll { overflow-x: auto; }
-  dialog { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--ink);
-           width: min(680px, calc(100vw - 24px)); padding: 0; max-height: calc(100dvh - 24px); }
-  dialog::backdrop { background: rgba(10,8,20,.55); }
-  dialog form { display: flex; flex-direction: column; max-height: inherit; }
-  dialog .hd { padding: 14px 18px; border-bottom: 1px solid var(--line); font-weight: 600; }
-  dialog .bd { padding: 6px 18px 14px; overflow-y: auto; }
-  dialog .ft { padding: 12px 18px; border-top: 1px solid var(--line); display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
-  .checks { display: flex; flex-wrap: wrap; gap: 6px 14px; }
-  .checks label { display: inline-flex; align-items: center; gap: 6px; font-weight: 400; }
-  .notice { padding: 10px 12px; border-radius: 8px; margin-block: 10px; background: var(--warn-soft); color: var(--warn); }
-  .notice.bad { background: var(--bad-soft); color: var(--bad); }
-  .notice.ok { background: var(--ok-soft); color: var(--ok); }
-  .code { font: 700 32px/1 ui-monospace, Menlo, Consolas, monospace; letter-spacing: .18em; padding: 14px 18px;
-          background: var(--accent-soft); color: var(--accent); border-radius: 10px; display: inline-block; }
-  .login { max-width: 380px; margin: 12vh auto 0; padding: 20px; }
-  .imgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-  .imgs figure { margin: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--bg); }
+
+  /* menus, diálogos, avisos */
+  .menu { position: fixed; z-index: 90; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 6px;
+          box-shadow: 0 12px 36px rgba(14,27,44,.16); max-height: min(420px, 70vh); overflow-y: auto; min-width: 200px; max-width: min(380px, calc(100vw - 16px)); }
+  .menu-it { display: flex; gap: 12px; align-items: center; width: 100%; border: 0; background: transparent; padding: 10px 12px; border-radius: 10px; text-align: left; }
+  .menu-it:hover { background: var(--line2); }
+  .menu-it.danger { color: var(--bad); }
+  .menu-tx { display: flex; flex-direction: column; min-width: 0; }
+  .menu-t { font-weight: 600; overflow-wrap: anywhere; }
+  .menu-s { color: var(--muted); font-size: 13px; }
+  .menu-hd { padding: 10px 12px 6px; color: var(--muted); font-size: 12.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .menu-sep { height: 1px; background: var(--line2); margin: 6px 4px; }
+  dialog { border: 0; border-radius: 18px; padding: 0; width: min(560px, calc(100vw - 24px)); max-height: calc(100dvh - 24px);
+           box-shadow: 0 24px 64px rgba(14,27,44,.28); color: var(--ink); }
+  dialog::backdrop { background: rgba(14,27,44,.5); }
+  dialog .dlg { display: flex; flex-direction: column; max-height: calc(100dvh - 24px); }
+  dialog .hd { padding: 20px 24px 6px; font-size: 20px; font-weight: 700; }
+  dialog .bd { padding: 10px 24px 6px; overflow-y: auto; }
+  dialog .ft { padding: 16px 24px 20px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+  .imgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 12px; }
+  .imgs figure { margin: 0; border: 2px solid transparent; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 0 0 1px var(--line); position: relative; }
+  .imgs figure.sel { border-color: var(--g); }
+  .imgs button.pick { display: block; width: 100%; border: 0; padding: 0; background: transparent; text-align: left; }
   .imgs img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: var(--line); }
   .imgs figcaption { font-size: 12px; padding: 6px 8px; overflow-wrap: anywhere; }
-  .qrbox { background: #fff; padding: 10px; border-radius: 10px; display: inline-block; max-width: 100%; margin-top: 8px; }
-  .qrbox svg { width: min(300px, 100%); height: auto; display: block; }
-  [hidden] { display: none !important; }
+  .imgs .del { position: absolute; top: 6px; right: 6px; background: rgba(255,255,255,.92); }
+  #toasts { position: fixed; right: 16px; bottom: 16px; z-index: 120; display: flex; flex-direction: column; gap: 8px; max-width: calc(100vw - 32px); }
+  .toast { background: var(--ink); color: #fff; padding: 12px 16px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.25); max-width: 420px; }
+  .toast.bad { background: var(--bad); }
+
+  @media (max-width: 1180px) {
+    .grid2 { grid-template-columns: minmax(0, 1fr); }
+    .side { position: static; }
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 960px) {
+    .shell { grid-template-columns: minmax(0, 1fr); }
+    .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 284px; z-index: 60; transform: translateX(-102%); transition: transform .2s; }
+    .sidebar.aberta { transform: none; box-shadow: 0 0 60px rgba(14,27,44,.3); }
+    .scrim.on { display: block; position: fixed; inset: 0; background: rgba(14,27,44,.4); z-index: 55; }
+    .hamb { display: inline-flex; }
+    .topbar { padding: 0 16px; }
+    .content { padding: 20px 16px 56px; }
+    .cols { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .page-h h1 { font-size: 26px; }
+    .two { grid-template-columns: 1fr; }
+    .kpis { grid-template-columns: 1fr; }
+    .auth-card { padding: 30px 22px 24px; }
+    .linha { grid-template-columns: 44px minmax(0, 1fr) auto; }
+    .linha .quando, .linha .acoes { grid-column: 2 / -1; }
+    .linha .acoes { justify-content: flex-start; margin-left: -8px; }
+    .seg button { padding: 10px 6px; font-size: 14px; gap: 6px; min-width: 0; }
+    .seg .ico { display: none; }
+    .pad { padding: 18px 16px; }
+    .crumbs .opc { display: none; }
+  }
 </style>
 </head>
 <body>
 <div id="app"></div>
+<div id="toasts" aria-live="polite"></div>
 <dialog id="dlg"></dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -111,12 +316,23 @@
 const SUPABASE_URL = 'https://cphfknoulocwebrduaci.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_nwagtec1zwwxs-zsf9mV5A_qCCaOkgU';
 const BUCKET = 'wpp-imagens';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const PREF_MANTER = 'ontime.manter';
+
+// "Manter conectado": guarda a sessão no navegador (localStorage) ou só até fechar a aba (sessionStorage).
+const manterConectado = () => { try { return localStorage.getItem(PREF_MANTER) !== '0'; } catch (_) { return true; } };
+const armazenamento = {
+  getItem(k) { try { return localStorage.getItem(k) ?? sessionStorage.getItem(k); } catch (_) { return null; } },
+  setItem(k, v) {
+    try {
+      const [a, b] = manterConectado() ? [localStorage, sessionStorage] : [sessionStorage, localStorage];
+      a.setItem(k, v); b.removeItem(k);
+    } catch (_) { /* sem armazenamento: a sessão vale só nesta página */ }
+  },
+  removeItem(k) { try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch (_) { /* ignora */ } },
+};
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storage: armazenamento } });
 
 /* ================= utilitários ================= */
-const DIAS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
-const DIA_LABEL = { dom: 'Dom', seg: 'Seg', ter: 'Ter', qua: 'Qua', qui: 'Qui', sex: 'Sex', sab: 'Sáb' };
-const TODOS = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
 const el = (tag, props = {}, ...kids) => {
   const n = document.createElement(tag);
   for (const [k, v] of Object.entries(props)) {
@@ -131,506 +347,1327 @@ const el = (tag, props = {}, ...kids) => {
   for (const c of kids.flat()) if (c !== null && c !== undefined && c !== false) n.append(c.nodeType ? c : document.createTextNode(String(c)));
   return n;
 };
+// h(tag, classe, [atributos], ...filhos): o terceiro argumento pode ser um objeto de atributos (ex.: { style: '...' }).
+const h = (tag, cls, ...kids) => {
+  const props = cls ? { class: cls } : {};
+  const p = kids[0];
+  if (p && typeof p === 'object' && !p.nodeType && !Array.isArray(p)) { Object.assign(props, p); kids.shift(); }
+  return el(tag, props, ...kids);
+};
 const two = (n) => String(n).padStart(2, '0');
-const fmt = (d) => d ? `${DIA_LABEL[DIAS[d.getDay()]]} ${two(d.getDate())}/${two(d.getMonth() + 1)} ${two(d.getHours())}:${two(d.getMinutes())}` : '—';
-const fmtFull = (iso) => { const d = new Date(iso); return `${two(d.getDate())}/${two(d.getMonth() + 1)} ${two(d.getHours())}:${two(d.getMinutes())}:${two(d.getSeconds())}`; };
-const HHMM = /^([01]?\d|2[0-3]):([0-5]\d)$/;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HHMM = /^([01]?\d|2[0-3]):([0-5]\d)$/;
+const DIAS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
+const DIA_LABEL = { dom: 'Dom', seg: 'Seg', ter: 'Ter', qua: 'Qua', qui: 'Qui', sex: 'Sex', sab: 'Sáb' };
+const TODOS = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
+const UTEIS = ['seg', 'ter', 'qua', 'qui', 'sex'];
+const FIMSEM = ['sab', 'dom'];
+const setIgual = (a, b) => a.length === b.length && a.every((x) => b.includes(x));
 
-function proxima(m, de = new Date()) {
+const ICONES = {
+  grid: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/>',
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+  monitor: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
+  bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  down: '<path d="M6 9l6 6 6-6"/>',
+  left: '<path d="M19 12H5M12 19l-7-7 7-7"/>',
+  right: '<path d="M5 12h14M12 5l7 7-7 7"/>',
+  clip: '<path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  repeat: '<path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
+  mail: '<path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M22 6l-10 7L2 6"/>',
+  lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  unlock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>',
+  eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+  eyeoff: '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  x: '<path d="M18 6L6 18M6 6l12 12"/>',
+  trash: '<path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
+  edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  copy: '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  send: '<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/>',
+  check: '<path d="M20 6L9 17l-5-5"/>',
+  alert: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/>',
+  menu: '<path d="M3 12h18M3 6h18M3 18h18"/>',
+  logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/>',
+  image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>',
+  poll: '<path d="M18 20V10M12 20V4M6 20v-6"/>',
+  phone: '<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/>',
+  search: '<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
+  key: '<path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>',
+  pause: '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',
+  play: '<polygon points="5 3 19 12 5 21 5 3"/>',
+};
+function ico(nome, tam = 20) {
+  const s = document.createElement('span');
+  s.className = 'ico';
+  s.innerHTML = `<svg viewBox="0 0 24 24" width="${tam}" height="${tam}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONES[nome] || ''}</svg>`;
+  return s;
+}
+
+// Horário de Brasília: devolve um Date cujos campos locais (ano, mês, dia, hora...) são os de Brasília.
+function agoraBR(d = new Date()) {
+  const p = {};
+  for (const x of new Intl.DateTimeFormat('en-US', { timeZone: 'America/Sao_Paulo', hourCycle: 'h23', year: 'numeric', month: '2-digit',
+    day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).formatToParts(d)) p[x.type] = x.value;
+  return new Date(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second);
+}
+const isoDia = (d) => `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}`;
+const hojeISO = () => isoDia(agoraBR());
+const amanhaISO = () => { const d = agoraBR(); d.setDate(d.getDate() + 1); return isoDia(d); };
+const brData = (iso) => (iso ? iso.split('-').reverse().join('/') : '');
+const fmtDH = (iso) => { const d = agoraBR(new Date(iso)); return `${two(d.getDate())}/${two(d.getMonth() + 1)} ${two(d.getHours())}:${two(d.getMinutes())}`; };
+const fmtProx = (d) => `${DIA_LABEL[DIAS[d.getDay()]].toLowerCase()}, ${two(d.getDate())}/${two(d.getMonth() + 1)} às ${two(d.getHours())}:${two(d.getMinutes())}`;
+const ha = (iso) => {
+  if (!iso) return 'nunca';
+  const s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 90) return 'agora há pouco';
+  if (s < 3600) return `há ${Math.round(s / 60)} min`;
+  if (s < 86400) return `há ${Math.round(s / 3600)} h`;
+  return `há ${Math.round(s / 86400)} dia(s)`;
+};
+const fmtNumero = (n) => {
+  const m = /^55(\d{2})(\d{4,5})(\d{4})$/.exec(String(n || ''));
+  return m ? `+55 ${m[1]} ${m[2]}-${m[3]}` : (n ? '+' + n : '');
+};
+const slug = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'grupo';
+
+// A janela de repetição (início/término) fica guardada na própria lista de dias, como "inicio:AAAA-MM-DD" e "termino:AAAA-MM-DD".
+const tok = (dias, p) => { const x = (dias || []).find((d) => typeof d === 'string' && d.startsWith(p)); return x ? x.slice(p.length) : null; };
+const soSemana = (dias) => (dias || []).filter((d) => TODOS.includes(d));
+
+function proxima(m, de = agoraBR()) {
   const hs = (m.horarios || []).map((t) => HHMM.exec(t)).filter(Boolean).map((x) => [+x[1], +x[2]]).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
   if (!hs.length) return null;
-  const limite = m.data ? 800 : 8;
-  for (let i = 0; i <= limite; i++) {
+  const ini = tok(m.dias, 'inicio:'), fim = tok(m.dias, 'termino:'), sem = soSemana(m.dias);
+  for (let i = 0; i <= (m.data ? 800 : 400); i++) {
     const dia = new Date(de.getFullYear(), de.getMonth(), de.getDate() + i);
-    if (m.data) {
-      const [y, mo, d] = m.data.split('-').map(Number);
-      if (dia.getFullYear() !== y || dia.getMonth() + 1 !== mo || dia.getDate() !== d) continue;
-    } else if (!(m.dias || []).includes(DIAS[dia.getDay()])) continue;
-    for (const [h, mi] of hs) {
-      const c = new Date(dia.getFullYear(), dia.getMonth(), dia.getDate(), h, mi);
+    const iso = isoDia(dia);
+    if (m.data) { if (iso !== m.data) continue; }
+    else {
+      if (fim && iso > fim) return null;
+      if (!sem.includes(DIAS[dia.getDay()])) continue;
+      if (ini && iso < ini) continue;
+    }
+    for (const [hh, mm] of hs) {
+      const c = new Date(dia.getFullYear(), dia.getMonth(), dia.getDate(), hh, mm);
       if (c > de) return c;
     }
   }
   return null;
 }
-function resumoDias(m) {
-  if (m.data) return `só em ${m.data.split('-').reverse().join('/')}`;
-  const d = m.dias || [];
-  if (d.length === 7) return 'todos os dias';
-  if (d.length === 5 && ['seg', 'ter', 'qua', 'qui', 'sex'].every((x) => d.includes(x))) return 'dias úteis';
-  if (d.length === 2 && d.includes('sab') && d.includes('dom')) return 'fim de semana';
-  return TODOS.filter((x) => d.includes(x)).map((x) => DIA_LABEL[x]).join(', ') || 'nenhum dia';
+function textoDias(m) {
+  if (m.data) return 'Uma única vez em ' + brData(m.data);
+  const d = soSemana(m.dias);
+  if (d.length === 7) return 'Todos os dias';
+  if (setIgual(d, UTEIS)) return 'Dias úteis (seg a sex)';
+  if (setIgual(d, FIMSEM)) return 'Fins de semana';
+  return TODOS.filter((x) => d.includes(x)).map((x) => DIA_LABEL[x]).join(', ') || 'Nenhum dia';
 }
+const listaHoras = (hs) => { const a = (hs || []).slice().sort(); return a.length > 1 ? a.slice(0, -1).join(', ') + ' e ' + a[a.length - 1] : (a[0] || '—'); };
+const frequencia = (m) => `${textoDias(m)}, às ${listaHoras(m.horarios)}`;
+const ehContato = (g) => !!g && /@s\.whatsapp\.net$/.test(g.jid || '');
+const iniciais = (u) => {
+  const nome = (u && ((u.user_metadata && u.user_metadata.name) || u.email)) || 'ME';
+  return nome.replace(/@.*/, '').replace(/[^A-Za-zÀ-ÿ0-9]/g, '').slice(0, 2).toUpperCase() || 'ME';
+};
+const nomeUsuario = (u) => (u && ((u.user_metadata && u.user_metadata.name) || (u.email || '').replace(/@agenda\.interno$/, ''))) || '';
 
 /* ================= estado ================= */
-const S = { user: null, admin: false, tab: 'agenda', msgs: [], grupos: [], imgs: [], conexao: null, envios: [], filtro: 'todos', busca: '' };
+const S = {
+  user: null, admin: false, demo: false, recuperando: false, carregado: false,
+  msgs: [], grupos: [], imgs: [], conexao: null, envios: [], statusFuncao: null, statusEm: 0, modelos: [],
+  busca: '', filtro: 'todos', aba: 'agendados', abaCont: 'grupos', msgConexao: '', listaWhats: null, navAberta: false,
+};
 const app = document.getElementById('app');
 const dlg = document.getElementById('dlg');
-let pollTimer = null;
+let timer = null;
+let rotaChave = '';
+
+function aviso(texto, tipo = 'ok') {
+  const t = h('div', 'toast' + (tipo === 'bad' ? ' bad' : ''), texto);
+  document.getElementById('toasts').append(t);
+  setTimeout(() => t.remove(), tipo === 'bad' ? 7000 : 3500);
+}
+const traduz = (e) => {
+  const m = (e && e.message) || String(e);
+  if (/duplicate key/i.test(m) && /nome/i.test(m)) return 'Já existe um item com esse nome.';
+  if (/duplicate key/i.test(m)) return 'Esse registro já existe.';
+  if (/row-level security/i.test(m)) return 'Sem permissão para essa ação.';
+  return m;
+};
+
+/* ================= menus ================= */
+let menuAberto = null;
+function fecharMenu() { if (menuAberto) { menuAberto.remove(); menuAberto = null; } }
+function abrirMenu(ancora, itens, { alinhar = 'left', largura = 0 } = {}) {
+  fecharMenu();
+  const m = h('div', 'menu');
+  m.setAttribute('role', 'menu');
+  for (const it of itens) {
+    if (it.sep) { m.append(h('div', 'menu-sep')); continue; }
+    if (it.cabecalho) { m.append(h('div', 'menu-hd', it.titulo)); continue; }
+    m.append(el('button', { class: 'menu-it' + (it.perigo ? ' danger' : ''), type: 'button', role: 'menuitem',
+      onclick: (e) => { e.stopPropagation(); fecharMenu(); if (it.onclick) it.onclick(); } },
+      it.icone ? ico(it.icone, 18) : null,
+      h('span', 'menu-tx', h('span', 'menu-t', it.titulo), it.sub ? h('span', 'menu-s', it.sub) : null)));
+  }
+  document.body.append(m);
+  const r = ancora.getBoundingClientRect();
+  m.style.minWidth = Math.max(largura, 200) + 'px';
+  const mw = m.offsetWidth;
+  let left = alinhar === 'right' ? r.right - mw : r.left;
+  left = Math.max(8, Math.min(left, window.innerWidth - mw - 8));
+  let top = r.bottom + 6;
+  if (top + m.offsetHeight > window.innerHeight - 8) top = Math.max(8, r.top - m.offsetHeight - 6);
+  m.style.left = left + 'px'; m.style.top = top + 'px';
+  menuAberto = m;
+  setTimeout(() => document.addEventListener('click', fecharMenu, { once: true }), 0);
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharMenu(); });
+
+/* ================= diálogos ================= */
+function confirmar({ titulo, texto, ok = 'Confirmar', perigo = false }) {
+  return new Promise((resolve) => {
+    const fim = (v) => { dlg.close(); resolve(v); };
+    dlg.replaceChildren(h('div', 'dlg',
+      h('div', 'hd', titulo),
+      h('div', 'bd', h('p', 'muted', texto)),
+      h('div', 'ft',
+        el('button', { class: 'btn', type: 'button', text: 'Cancelar', onclick: () => fim(false) }),
+        el('button', { class: 'btn ' + (perigo ? 'danger' : 'primary'), type: 'button', text: ok, onclick: () => fim(true) }))));
+    dlg.onclose = () => resolve(false);
+    dlg.showModal();
+  });
+}
+function abrirDialogo(titulo, corpo, rodape, { largura } = {}) {
+  dlg.style.width = largura || '';
+  dlg.onclose = null;
+  dlg.replaceChildren(h('div', 'dlg', h('div', 'hd', titulo), h('div', 'bd', corpo), h('div', 'ft', rodape)));
+  dlg.showModal();
+}
+const fecharDialogo = () => { dlg.onclose = null; if (dlg.open) dlg.close(); };
+
+/* ================= acesso à API (real ou demonstração) ================= */
+const cacheUrl = new Map();
+const real = {
+  async carregar() {
+    const [m, g, c, e, i] = await Promise.all([
+      sb.from('wpp_mensagens').select('*').order('nome'),
+      sb.from('wpp_grupos').select('*').order('apelido'),
+      sb.from('wpp_conexao').select('*').eq('id', 1).maybeSingle(),
+      sb.from('wpp_envios').select('*').order('enviado_em', { ascending: false }).limit(200),
+      sb.storage.from(BUCKET).list('', { limit: 300, sortBy: { column: 'name', order: 'asc' } }),
+    ]);
+    if (m.error) throw new Error(m.error.message);
+    if (g.error) throw new Error(g.error.message);
+    return { msgs: m.data || [], grupos: g.data || [], conexao: c.data || null, envios: e.data || [],
+      imgs: (i.data || []).filter((f) => f.name && !f.name.startsWith('.')).map((f) => f.name) };
+  },
+  async leve() {
+    const [c, e] = await Promise.all([
+      sb.from('wpp_conexao').select('*').eq('id', 1).maybeSingle(),
+      sb.from('wpp_envios').select('*').order('enviado_em', { ascending: false }).limit(200),
+    ]);
+    return { conexao: c.data || null, envios: e.data || S.envios };
+  },
+  async salvarMensagem(row, id) {
+    const r = id ? await sb.from('wpp_mensagens').update(row).eq('id', id) : await sb.from('wpp_mensagens').insert(row);
+    if (r.error) throw new Error(traduz(r.error));
+  },
+  async excluirMensagem(id) { const r = await sb.from('wpp_mensagens').delete().eq('id', id); if (r.error) throw new Error(traduz(r.error)); },
+  async ativar(id, ativo) { const r = await sb.from('wpp_mensagens').update({ ativo }).eq('id', id); if (r.error) throw new Error(traduz(r.error)); },
+  async salvarGrupo(row, id) {
+    const r = id ? await sb.from('wpp_grupos').update(row).eq('id', id) : await sb.from('wpp_grupos').insert(row);
+    if (r.error) throw new Error(traduz(r.error));
+  },
+  async excluirGrupo(id) { const r = await sb.from('wpp_grupos').delete().eq('id', id); if (r.error) throw new Error(traduz(r.error)); },
+  async enviarImagem(arquivo) {
+    const nome = arquivo.name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9._ -]/g, '_');
+    const r = await sb.storage.from(BUCKET).upload(nome, arquivo, { upsert: true, contentType: arquivo.type });
+    if (r.error) throw new Error(r.error.message);
+    cacheUrl.delete(nome);
+    return nome;
+  },
+  async excluirImagem(nome) { await sb.storage.from(BUCKET).remove([nome]); cacheUrl.delete(nome); },
+  async urlImagem(nome) {
+    const c = cacheUrl.get(nome);
+    if (c && c.ate > Date.now()) return c.url;
+    const { data } = await sb.storage.from(BUCKET).createSignedUrl(nome, 3600);
+    if (!data) return null;
+    cacheUrl.set(nome, { url: data.signedUrl, ate: Date.now() + 3000000 });
+    return data.signedUrl;
+  },
+  async funcao(corpo) {
+    const { data, error } = await sb.functions.invoke('ontime-enviar', { body: corpo });
+    if (error) {
+      let msg = error.message || 'erro';
+      try { const j = await error.context.json(); if (j && j.erro) msg = j.erro; } catch (_) { /* mantém */ }
+      throw new Error(msg);
+    }
+    if (data && data.erro) throw new Error(data.erro);
+    return data;
+  },
+  async salvarModelos(lista) {
+    const { data, error } = await sb.auth.updateUser({ data: { modelos: lista } });
+    if (error) throw new Error(error.message);
+    if (data && data.user) S.user = data.user;
+  },
+};
+
+// Modo demonstração: tudo em memória, nada vai para o banco nem para o WhatsApp.
+let demoDB = null;
+function criarDemo() {
+  let n = 100;
+  const grupos = [
+    { id: 'g1', apelido: 'equipe', nome_whatsapp: 'Equipe de trabalho', jid: '1@g.us', teste: false },
+    { id: 'g2', apelido: 'clientes', nome_whatsapp: 'Clientes VIP', jid: '2@g.us', teste: false },
+    { id: 'g3', apelido: 'teste', nome_whatsapp: 'Grupo de testes', jid: '3@g.us', teste: true },
+    { id: 'c1', apelido: 'contato-5511999990000', nome_whatsapp: 'Ana Souza', jid: '5511999990000@s.whatsapp.net', teste: false },
+  ];
+  const base = { ativo: true, data: null, textos: [], ordem: 'aleatoria', imagem: null, enquete: null, acao: null, criado_em: new Date().toISOString() };
+  const msgs = [
+    { ...base, id: 'm1', nome: 'Bom dia, equipe', tipo: 'mensagem', grupos: ['equipe'], horarios: ['09:00'], dias: [...TODOS, 'inicio:' + hojeISO()], textos: ['Bom dia, pessoal! Lembrando da nossa reunião diária às 10h. Até lá!'] },
+    { ...base, id: 'm2', nome: 'Promoção da semana', tipo: 'mensagem', grupos: ['clientes'], horarios: ['12:30'], dias: ['seg', 'qua', 'sex'], imagem: 'promocao.png', textos: ['🔥 Promoção da semana! Chame no privado e garanta o seu.'] },
+    { ...base, id: 'm3', nome: 'Enquete de sexta', tipo: 'enquete', grupos: ['equipe'], horarios: ['16:00'], dias: ['sex'], enquete: { pergunta: 'Qual horário prefere para a reunião?', opcoes: ['9h', '10h', '14h'], multipla: false } },
+    { ...base, id: 'm4', nome: 'Trancar grupo à noite', tipo: 'acao', grupos: ['clientes'], horarios: ['20:00'], dias: TODOS.slice(), acao: 'travar' },
+    { ...base, id: 'm5', nome: 'Rascunho: novidades', tipo: 'mensagem', ativo: false, grupos: ['equipe'], horarios: ['10:00'], dias: UTEIS.slice(), textos: ['Novidades chegando!'] },
+  ];
+  const agora = Date.now();
+  const envios = [
+    { id: 3, mensagem: 'Bom dia, equipe', grupo: 'equipe', ok: true, detalhe: 'texto', enviado_em: new Date(agora - 3600e3 * 2).toISOString(), previsto: null },
+    { id: 2, mensagem: 'Promoção da semana', grupo: 'clientes', ok: true, detalhe: 'imagem [promocao.png] + legenda', enviado_em: new Date(agora - 3600e3 * 26).toISOString(), previsto: null },
+    { id: 1, mensagem: 'Trancar grupo à noite', grupo: 'clientes', ok: false, detalhe: 'sem conexão com o WhatsApp', enviado_em: new Date(agora - 3600e3 * 30).toISOString(), previsto: null },
+  ];
+  return { grupos, msgs, envios, imgs: ['bom-dia.png', 'promocao.png'], modelos: [
+    { id: 't1', nome: 'Lembrete de reunião', texto: 'Bom dia, pessoal! Lembrando da nossa reunião diária às 10h. Até lá!', imagem: null },
+    { id: 't2', nome: 'Promoção relâmpago', texto: '🔥 Promoção relâmpago! Chame no privado e garanta o seu.', imagem: 'promocao.png' }],
+    conexao: { id: 1, status: 'conectado', numero: '5511988887777', detalhe: null, enviador_visto_em: new Date().toISOString(), codigo_vinculacao: null },
+    agenda: true, nid: () => 'd' + (n++) };
+}
+const demo = {
+  async carregar() { const d = demoDB; return { msgs: d.msgs.map((m) => ({ ...m })), grupos: d.grupos.map((g) => ({ ...g })), conexao: { ...d.conexao, enviador_visto_em: new Date().toISOString() }, envios: d.envios.slice(), imgs: d.imgs.slice() }; },
+  async leve() { return { conexao: { ...demoDB.conexao, enviador_visto_em: new Date().toISOString() }, envios: demoDB.envios.slice() }; },
+  async salvarMensagem(row, id) {
+    if (demoDB.msgs.some((m) => m.nome === row.nome && m.id !== id)) throw new Error('Já existe um item com esse nome.');
+    if (id) Object.assign(demoDB.msgs.find((m) => m.id === id), row);
+    else demoDB.msgs.push({ ...row, id: demoDB.nid(), criado_em: new Date().toISOString() });
+  },
+  async excluirMensagem(id) { demoDB.msgs = demoDB.msgs.filter((m) => m.id !== id); },
+  async ativar(id, ativo) { demoDB.msgs.find((m) => m.id === id).ativo = ativo; },
+  async salvarGrupo(row, id) {
+    if (demoDB.grupos.some((g) => g.apelido === row.apelido && g.id !== id)) throw new Error('Esse apelido já existe.');
+    if (id) Object.assign(demoDB.grupos.find((g) => g.id === id), row); else demoDB.grupos.push({ ...row, id: demoDB.nid() });
+  },
+  async excluirGrupo(id) { demoDB.grupos = demoDB.grupos.filter((g) => g.id !== id); },
+  async enviarImagem(arquivo) { demoDB.imgs.push(arquivo.name); return arquivo.name; },
+  async excluirImagem(nome) { demoDB.imgs = demoDB.imgs.filter((x) => x !== nome); },
+  async urlImagem(nome) {
+    const cor = ['#c9ead9', '#d6e4f7', '#f7e3c9', '#e9d6f7'][Math.abs([...nome].reduce((a, c) => a + c.charCodeAt(0), 0)) % 4];
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240"><rect width="240" height="240" fill="${cor}"/><text x="120" y="130" font-family="sans-serif" font-size="20" text-anchor="middle" fill="#14452f">${nome.replace(/[<&]/g, '')}</text></svg>`);
+  },
+  async funcao(c) {
+    await sleep(500);
+    const d = demoDB;
+    if (c.acao === 'status') return { conexao: d.conexao, agenda_ativa: d.agenda, sessao_guardada: d.conexao.status === 'conectado' };
+    if (c.acao === 'agenda') { d.agenda = !!c.ativa; return { agenda_ativa: d.agenda }; }
+    if (c.acao === 'vincular') { d.conexao = { ...d.conexao, status: 'aguardando_codigo', codigo_vinculacao: 'ONTIME-DEMO-QR-NAO-FUNCIONA' }; return { qr: d.conexao.codigo_vinculacao }; }
+    if (c.acao === 'desconectar') { d.conexao = { ...d.conexao, status: 'desconectado', numero: null, codigo_vinculacao: null }; return { desconectado: true }; }
+    if (c.acao === 'sincronizar_grupos') return { grupos: [
+      { nome: 'Equipe de trabalho', admin: true, trancado: false }, { nome: 'Clientes VIP', admin: true, trancado: true },
+      { nome: 'Família', admin: false, trancado: false }, { nome: 'Fornecedores', admin: true, trancado: false }] };
+    if (c.acao === 'enviar_agora') return { ok: true, detalhe: 'texto (demonstração)', conectou_ms: 900, total_ms: 2100 };
+    return {};
+  },
+  async salvarModelos(lista) { demoDB.modelos = lista; },
+};
+const D = () => (S.demo ? demo : real);
+const chamarFuncao = (c) => D().funcao(c);
+
+const lerModelos = (u) => { const m = u && u.user_metadata && u.user_metadata.modelos; return Array.isArray(m) ? m : []; };
+async function recarregar() { Object.assign(S, await D().carregar()); }
+const enviadorOnline = () => S.conexao && S.conexao.enviador_visto_em && (Date.now() - new Date(S.conexao.enviador_visto_em).getTime() < 150000);
+// Devolve true quando consultou o servidor de fato (a tela só precisa ser redesenhada nesse caso).
+async function carregarStatusFuncao(forcar) {
+  if (!forcar && S.statusFuncao && Date.now() - S.statusEm < 20000) return false;
+  try { S.statusFuncao = await chamarFuncao({ acao: 'status' }); } catch (e) { S.statusFuncao = { erro: e.message }; }
+  S.statusEm = Date.now();
+  return true;
+}
 
 /* ================= acesso ================= */
 async function init() {
   const { data } = await sb.auth.getSession();
   S.user = data.session ? data.session.user : null;
-  sb.auth.onAuthStateChange((_e, session) => {
+  sb.auth.onAuthStateChange((evento, session) => {
+    if (evento === 'PASSWORD_RECOVERY') { S.recuperando = true; S.user = session ? session.user : null; entrar(); return; }
     const novo = session ? session.user : null;
-    if ((novo && novo.id) !== (S.user && S.user.id)) { S.user = novo; boot(); }
+    if ((novo && novo.id) !== (S.user && S.user.id)) { S.user = novo; S.carregado = false; entrar(); }
   });
-  boot();
+  window.addEventListener('hashchange', () => { if (S.carregado) { S.navAberta = false; renderPagina(); } });
+  entrar();
 }
-async function boot() {
-  clearInterval(pollTimer);
+async function entrar() {
+  clearInterval(timer);
+  S.carregado = false;
+  if (S.recuperando) return renderNovaSenha();
   if (!S.user) return renderLogin();
+  app.replaceChildren(h('div', 'boot', 'Carregando…'));
   const { data, error } = await sb.from('wpp_admins').select('user_id').eq('user_id', S.user.id).maybeSingle();
   S.admin = !error && !!data;
   if (!S.admin) return renderSemAcesso();
-  await carregarTudo();
-  render();
-  pollTimer = setInterval(atualizarLeve, 4000);
+  S.modelos = lerModelos(S.user);
+  try { await recarregar(); } catch (e) { aviso('Não consegui carregar os dados: ' + e.message, 'bad'); }
+  S.carregado = true;
+  montarShell(); renderPagina();
+  timer = setInterval(leve, 6000);
 }
+function logoImg(cls) { return el('img', { src: 'logo.png', alt: 'OnTime', class: cls || '' }); }
+
 function renderLogin(msg, ok) {
-  const email = el('input', { type: 'text', id: 'lg-email', autocomplete: 'username', autocapitalize: 'none', spellcheck: 'false', placeholder: 'seu login' });
-  const senha = el('input', { type: 'password', id: 'lg-senha', autocomplete: 'current-password', placeholder: 'senha' });
-  const aviso = el('div', { class: 'notice' + (ok ? ' ok' : ' bad'), hidden: !msg, text: msg || '' });
-  const entrar = async () => {
-    aviso.hidden = true;
+  const email = el('input', { class: 'inp', type: 'text', id: 'lg-email', autocomplete: 'username', autocapitalize: 'none', spellcheck: 'false', placeholder: 'Digite seu e-mail' });
+  const senha = el('input', { class: 'inp', type: 'password', id: 'lg-senha', autocomplete: 'current-password', placeholder: 'Digite sua senha' });
+  const manter = el('input', { type: 'checkbox', id: 'lg-manter', checked: manterConectado() });
+  const avisoEl = h('div', 'notice ' + (ok ? 'ok' : 'bad'), msg || '');
+  avisoEl.hidden = !msg;
+  const olho = el('button', { class: 'ibtn reveal', type: 'button', 'aria-label': 'Mostrar senha', onclick: () => {
+    senha.type = senha.type === 'password' ? 'text' : 'password';
+    olho.replaceChildren(ico(senha.type === 'password' ? 'eye' : 'eyeoff', 20));
+  } }, ico('eye', 20));
+  const botao = el('button', { class: 'btn primary', type: 'submit' }, 'Entrar no painel', ico('right', 20));
+  const entrarFn = async (ev) => {
+    ev.preventDefault();
+    avisoEl.hidden = true; botao.disabled = true;
+    try { localStorage.setItem(PREF_MANTER, manter.checked ? '1' : '0'); } catch (_) { /* ignora */ }
     const id = email.value.trim().toLowerCase();
-    const mail = id.includes('@') ? id : id + '@agenda.interno';
-    const { error } = await sb.auth.signInWithPassword({ email: mail, password: senha.value });
+    const { error } = await sb.auth.signInWithPassword({ email: id.includes('@') ? id : id + '@agenda.interno', password: senha.value });
+    botao.disabled = false;
     if (error) {
-      aviso.className = 'notice bad'; aviso.hidden = false;
-      aviso.textContent = /invalid login/i.test(error.message) ? 'Login ou senha incorretos.' : error.message;
+      avisoEl.className = 'notice bad'; avisoEl.hidden = false;
+      avisoEl.textContent = /invalid login/i.test(error.message) ? 'E-mail/login ou senha incorretos.' : error.message;
     }
   };
-  senha.addEventListener('keydown', (e) => { if (e.key === 'Enter') entrar(); });
-  app.replaceChildren(el('div', { class: 'login card' },
-    el('h1', { text: 'OnTime' }),
-    el('p', { class: 'muted', text: 'Agenda de mensagens do WhatsApp. Acesso restrito.' }),
-    el('label', { class: 'f', for: 'lg-email', text: 'Login' }), email,
-    el('label', { class: 'f', for: 'lg-senha', text: 'Senha' }), senha,
-    aviso,
-    el('div', { class: 'row', style: 'margin-top:14px' },
-      el('button', { class: 'primary', text: 'Entrar', onclick: entrar }))));
+  app.replaceChildren(h('div', 'auth',
+    h('div', 'card auth-card',
+      logoImg('auth-logo'),
+      h('h1', '', 'Acesso administrativo'),
+      h('p', 'sub', 'Entre com sua conta de administrador.'),
+      el('form', { onsubmit: entrarFn, novalidate: true },
+        h('div', 'field', el('label', { class: 'lbl', for: 'lg-email' }, 'E-mail'), h('div', 'inpi', ico('mail'), email)),
+        h('div', 'field', el('label', { class: 'lbl', for: 'lg-senha' }, 'Senha'), h('div', 'inpi', ico('lock'), senha, olho)),
+        h('div', 'opts',
+          el('label', {}, manter, 'Manter conectado'),
+          el('button', { class: 'linkbtn', type: 'button', onclick: () => renderEsqueci(email.value) }, 'Esqueci minha senha')),
+        avisoEl,
+        h('div', '', botao)),
+      h('div', 'sep', 'Acesso exclusivo para administradores.')),
+    h('div', 'muted small', `© ${new Date().getFullYear()} OnTime`)));
+}
+function renderEsqueci(valor) {
+  const email = el('input', { class: 'inp', type: 'email', id: 'es-email', autocomplete: 'email', placeholder: 'Digite seu e-mail', value: valor && valor.includes('@') ? valor : '' });
+  const avisoEl = h('div', 'notice'); avisoEl.hidden = true;
+  const enviar = async (ev) => {
+    ev.preventDefault();
+    const mail = email.value.trim().toLowerCase();
+    if (!/^\S+@\S+\.\S+$/.test(mail)) { avisoEl.className = 'notice bad'; avisoEl.textContent = 'Digite o e-mail cadastrado.'; avisoEl.hidden = false; return; }
+    const { error } = await sb.auth.resetPasswordForEmail(mail, { redirectTo: location.origin + location.pathname });
+    avisoEl.hidden = false;
+    if (error) { avisoEl.className = 'notice bad'; avisoEl.textContent = error.message; }
+    else { avisoEl.className = 'notice ok'; avisoEl.textContent = 'Se o e-mail estiver cadastrado, você receberá um link para criar uma nova senha.'; }
+  };
+  app.replaceChildren(h('div', 'auth',
+    h('div', 'card auth-card',
+      logoImg('auth-logo'),
+      h('h1', '', 'Recuperar senha'),
+      h('p', 'sub', 'Informe o e-mail da sua conta para receber o link.'),
+      el('form', { onsubmit: enviar, novalidate: true },
+        h('div', 'field', el('label', { class: 'lbl', for: 'es-email' }, 'E-mail'), h('div', 'inpi', ico('mail'), email)),
+        h('div', '', avisoEl),
+        h('div', 'row', el('button', { class: 'btn primary', type: 'submit', style: 'width:100%;margin-top:18px' }, 'Enviar link'))),
+      h('div', 'sep', ''),
+      h('div', '', el('button', { class: 'linkbtn', type: 'button', onclick: () => renderLogin() }, ico('left', 18), 'Voltar para o login')))));
+}
+function renderNovaSenha() {
+  const a = el('input', { class: 'inp', type: 'password', id: 'rn-a', autocomplete: 'new-password', placeholder: 'Nova senha' });
+  const b = el('input', { class: 'inp', type: 'password', id: 'rn-b', autocomplete: 'new-password', placeholder: 'Repita a nova senha' });
+  const avisoEl = h('div', 'notice bad'); avisoEl.hidden = true;
+  const salvar = async (ev) => {
+    ev.preventDefault();
+    const erro = validarSenha(a.value, b.value);
+    if (erro) { avisoEl.textContent = erro; avisoEl.hidden = false; return; }
+    const { error } = await sb.auth.updateUser({ password: a.value });
+    if (error) { avisoEl.textContent = error.message; avisoEl.hidden = false; return; }
+    S.recuperando = false; history.replaceState(null, '', location.pathname); entrar();
+  };
+  app.replaceChildren(h('div', 'auth',
+    h('div', 'card auth-card', logoImg('auth-logo'), h('h1', '', 'Criar nova senha'), h('p', 'sub', 'Escolha uma senha nova para a sua conta.'),
+      el('form', { onsubmit: salvar },
+        h('div', 'field', el('label', { class: 'lbl', for: 'rn-a' }, 'Nova senha'), a),
+        h('div', 'field', el('label', { class: 'lbl', for: 'rn-b' }, 'Repita a nova senha'), b),
+        h('div', '', avisoEl),
+        el('button', { class: 'btn primary', type: 'submit', style: 'width:100%;margin-top:18px' }, 'Salvar senha')))));
+}
+function validarSenha(a, b) {
+  if (a.length < 10) return 'Use pelo menos 10 caracteres.';
+  if (/^\d+$/.test(a)) return 'Misture letras e números (só números é fácil de adivinhar).';
+  if (a !== b) return 'As duas senhas não são iguais.';
+  return null;
 }
 function renderSemAcesso() {
-  app.replaceChildren(el('div', { class: 'login card' },
-    el('h1', { text: 'Sem permissão' }),
-    el('p', { text: 'Você entrou como ' + S.user.email + ', mas este usuário não tem acesso ao painel da agenda.' }),
-    el('div', { class: 'row' },
-      el('button', { text: 'Verificar de novo', onclick: boot }),
-      el('button', { text: 'Sair', onclick: () => sb.auth.signOut() }))));
+  app.replaceChildren(h('div', 'auth',
+    h('div', 'card auth-card', logoImg('auth-logo'), h('h1', '', 'Sem permissão'),
+      h('p', 'sub', `Você entrou como ${S.user.email}, mas este usuário não tem acesso ao painel.`),
+      h('div', 'row', el('button', { class: 'btn', onclick: entrar }, 'Verificar de novo'),
+        el('button', { class: 'btn', onclick: () => sb.auth.signOut() }, 'Sair')))));
 }
 
-/* ================= dados ================= */
-async function carregarTudo() {
-  const [m, g, c, e, i] = await Promise.all([
-    sb.from('wpp_mensagens').select('*').order('nome'),
-    sb.from('wpp_grupos').select('*').order('apelido'),
-    sb.from('wpp_conexao').select('*').eq('id', 1).maybeSingle(),
-    sb.from('wpp_envios').select('*').order('enviado_em', { ascending: false }).limit(150),
-    sb.storage.from(BUCKET).list('', { limit: 300, sortBy: { column: 'name', order: 'asc' } }),
-  ]);
-  S.msgs = m.data || []; S.grupos = g.data || []; S.conexao = c.data; S.envios = e.data || [];
-  S.imgs = (i.data || []).filter((f) => f.name && !f.name.startsWith('.'));
+/* ================= estrutura (menu lateral + topo) ================= */
+const NAV = [
+  ['visao-geral', 'Visão geral', 'grid'], ['agendamentos', 'Agendamentos', 'calendar'],
+  ['contatos', 'Contatos e grupos', 'users'], ['modelos', 'Modelos', 'file'],
+];
+function rotaAtual() {
+  const [path, q] = location.hash.replace(/^#\/?/, '').split('?');
+  const partes = path.split('/').filter(Boolean);
+  return { partes, q: new URLSearchParams(q || '') };
 }
-async function atualizarLeve() {
-  if (dlg.open) return;
-  if (S.tab === 'conexao') {
-    const { data } = await sb.from('wpp_conexao').select('*').eq('id', 1).maybeSingle();
-    S.conexao = data; if (S.tab === 'conexao') renderConteudo();
-  } else if (S.tab === 'historico') {
-    const { data } = await sb.from('wpp_envios').select('*').order('enviado_em', { ascending: false }).limit(150);
-    S.envios = data || []; renderConteudo();
+const ir = (p) => { location.hash = '#/' + p; };
+
+function montarShell() {
+  const nav = h('nav', 'nav', NAV.map(([id, nome, ic]) => el('a', { href: '#/' + id, 'data-nav': id }, ico(ic), nome)));
+  const demoBtn = el('button', { class: 'demo', type: 'button', id: 'btn-demo', 'aria-pressed': String(S.demo), onclick: alternarDemo },
+    ico('monitor'), 'Modo demonstração');
+  const ws = el('button', { class: 'ws', type: 'button', onclick: (e) => menuUsuario(e.currentTarget, 'top') },
+    h('span', 'avatar sm', iniciais(S.user)), h('strong', 'grow', 'Meu espaço'), ico('down'));
+  const side = h('aside', 'sidebar' + (S.navAberta ? ' aberta' : ''),
+    el('a', { class: 'logo', href: '#/visao-geral', 'aria-label': 'OnTime' }, logoImg()),
+    nav,
+    h('div', 'bottom',
+      h('div', 'nav', el('a', { href: '#/configuracoes', 'data-nav': 'configuracoes' }, ico('settings'), 'Configurações')),
+      demoBtn, ws));
+  const sino = el('button', { class: 'ibtn bell', type: 'button', 'aria-label': 'Notificações', onclick: (e) => abrirNotificacoes(e.currentTarget) },
+    ico('bell', 22), h('span', 'badge', '0'));
+  sino.querySelector('.badge').hidden = true;
+  const topo = h('header', 'topbar',
+    el('button', { class: 'ibtn hamb', type: 'button', 'aria-label': 'Abrir menu', onclick: () => { document.querySelector('.sidebar').classList.add('aberta'); document.querySelector('.scrim').classList.add('on'); } }, ico('menu', 22)),
+    h('div', 'crumbs', ''), h('span', 'sp'), sino,
+    el('button', { class: 'who', type: 'button', onclick: (e) => menuUsuario(e.currentTarget, 'bottom') },
+      h('span', 'avatar sm', iniciais(S.user)), ico('down', 18)));
+  const scrim = el('div', { class: 'scrim', onclick: () => { document.querySelector('.sidebar').classList.remove('aberta'); scrim.classList.remove('on'); } });
+  app.replaceChildren(h('div', 'shell', side, h('div', 'main', S.demo ? h('div', 'demo-banner', 'Modo demonstração: dados fictícios, nada é enviado de verdade.') : null,
+    topo, h('main', 'content', h('div', { id: 'pagina' }))), scrim));
+  document.querySelector('.content').firstChild.id = 'pagina';
+}
+function menuUsuario(ancora, lado) {
+  abrirMenu(ancora, [
+    { cabecalho: true, titulo: nomeUsuario(S.user) || 'Minha conta' },
+    { titulo: 'Alterar senha', icone: 'key', onclick: dialogoSenha },
+    { titulo: 'Configurações', icone: 'settings', onclick: () => ir('configuracoes') },
+    { sep: true },
+    { titulo: 'Sair', icone: 'logout', onclick: () => sb.auth.signOut() },
+  ], { alinhar: lado === 'top' ? 'left' : 'right', largura: 220 });
+}
+async function alternarDemo() {
+  S.demo = !S.demo;
+  S.statusFuncao = null; S.listaWhats = null;
+  if (S.demo) { demoDB = criarDemo(); S.modelos = demoDB.modelos; } else S.modelos = lerModelos(S.user);
+  try { await recarregar(); } catch (e) { aviso(e.message, 'bad'); }
+  montarShell(); rotaChave = ''; ir('visao-geral'); renderPagina();
+  aviso(S.demo ? 'Modo demonstração ligado: nada é enviado de verdade.' : 'Voltou para os seus dados reais.');
+}
+function dialogoSenha() {
+  const a = el('input', { class: 'inp', type: 'password', id: 'ns-a', autocomplete: 'new-password' });
+  const b = el('input', { class: 'inp', type: 'password', id: 'ns-b', autocomplete: 'new-password' });
+  const msg = h('div', 'notice bad'); msg.hidden = true;
+  const salvar = async () => {
+    const erro = validarSenha(a.value, b.value);
+    if (erro) { msg.className = 'notice bad'; msg.textContent = erro; msg.hidden = false; return; }
+    if (S.demo) { msg.className = 'notice ok'; msg.textContent = 'Demonstração: a senha não foi alterada.'; msg.hidden = false; return; }
+    const { error } = await sb.auth.updateUser({ password: a.value });
+    if (error) { msg.className = 'notice bad'; msg.textContent = error.message; msg.hidden = false; return; }
+    msg.className = 'notice ok'; msg.textContent = 'Senha alterada.'; msg.hidden = false;
+    setTimeout(fecharDialogo, 1200);
+  };
+  abrirDialogo('Alterar senha', [
+    h('div', 'field', el('label', { class: 'lbl', for: 'ns-a' }, 'Nova senha'), a),
+    h('div', 'field', el('label', { class: 'lbl', for: 'ns-b' }, 'Repita a nova senha'), b),
+    h('div', 'hint', 'Mínimo de 10 caracteres, misturando letras e números.'), h('div', '', msg)],
+  [el('button', { class: 'btn', type: 'button', onclick: fecharDialogo }, 'Cancelar'),
+    el('button', { class: 'btn primary', type: 'button', onclick: salvar }, 'Salvar')]);
+}
+
+/* ---- notificações ---- */
+const lerVisto = () => { try { return Number(localStorage.getItem('ontime.notif') || 0); } catch (_) { return 0; } };
+function alertas() {
+  const lista = [];
+  const c = S.conexao || {};
+  if (c.status && c.status !== 'conectado') lista.push({ id: 'conn', titulo: 'WhatsApp desconectado', sub: c.detalhe || 'Conecte em Configurações para enviar mensagens.', ir: 'configuracoes', fixo: true });
+  const limite = Date.now() - 86400e3;
+  for (const e of S.envios) {
+    if (!e.ok && new Date(e.enviado_em).getTime() > limite) lista.push({ id: 'e' + e.id, titulo: `Falha: ${e.mensagem}`, sub: `${fmtDH(e.enviado_em)} — ${e.detalhe || 'erro'}`, ir: 'agendamentos?aba=historico', t: new Date(e.enviado_em).getTime() });
+  }
+  return lista;
+}
+function atualizarSino() {
+  const b = document.querySelector('.bell .badge');
+  if (!b) return;
+  const visto = lerVisto();
+  const n = alertas().filter((a) => a.fixo || a.t > visto).length;
+  b.textContent = n > 9 ? '9+' : String(n); b.hidden = n === 0;
+}
+function abrirNotificacoes(ancora) {
+  const l = alertas();
+  const itens = l.length ? [{ cabecalho: true, titulo: 'Notificações' }, ...l.slice(0, 8).map((a) => ({ titulo: a.titulo, sub: a.sub, icone: 'alert', onclick: () => { const [p, q] = a.ir.split('?'); if (q) S.aba = 'historico'; ir(p); } })),
+    { sep: true }, { titulo: 'Marcar como lidas', icone: 'check', onclick: () => { try { localStorage.setItem('ontime.notif', String(Date.now())); } catch (_) { /* ignora */ } atualizarSino(); } }]
+    : [{ cabecalho: true, titulo: 'Notificações' }, { titulo: 'Tudo certo por aqui', sub: 'Nenhuma falha nas últimas 24 horas.', icone: 'check', onclick: () => {} }];
+  abrirMenu(ancora, itens, { alinhar: 'right', largura: 320 });
+}
+
+/* ---- atualização leve (conexão e envios) ---- */
+async function leve() {
+  if (S.demo || dlg.open || menuAberto || !S.carregado) return;
+  try { Object.assign(S, await real.leve()); } catch (_) { return; }
+  atualizarSino();
+  const p = rotaAtual().partes;
+  const ativo = document.activeElement;
+  if (ativo && ['INPUT', 'TEXTAREA', 'SELECT'].includes(ativo.tagName)) return;
+  const pag = p[0] || 'visao-geral';
+  if (pag === 'visao-geral' || pag === 'configuracoes' || (pag === 'agendamentos' && !p[1] && S.aba === 'historico')) renderPagina(true);
+}
+
+/* ================= roteamento ================= */
+function renderPagina(silencioso) {
+  const { partes, q } = rotaAtual();
+  const chave = partes.join('/');
+  const pagina = document.getElementById('pagina');
+  if (!pagina) return;
+  const raiz = partes[0] || 'visao-geral';
+  document.querySelectorAll('[data-nav]').forEach((a) => { if (a.dataset.nav === raiz) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+  document.querySelector('.sidebar').classList.remove('aberta');
+  document.querySelector('.scrim').classList.remove('on');
+  let titulo = '', mig = [], no;
+  if (raiz === 'visao-geral') { titulo = 'Visão geral'; no = paginaVisao(); carregarStatusFuncao().then((buscou) => { if (buscou) repintarSeAberta('visao-geral'); }); }
+  else if (raiz === 'agendamentos') {
+    if (q.get('aba') === 'historico') S.aba = 'historico';
+    if (partes[1] === 'nova') { titulo = 'Nova mensagem'; mig = [['Agendamentos', 'agendamentos']]; no = paginaForm(null); }
+    else if (partes[1]) { titulo = 'Editar mensagem'; mig = [['Agendamentos', 'agendamentos']]; no = paginaForm(partes[1]); }
+    else { titulo = 'Agendamentos'; no = paginaLista(); }
+  }
+  else if (raiz === 'contatos') { titulo = 'Contatos e grupos'; no = paginaContatos(); }
+  else if (raiz === 'modelos') { titulo = 'Modelos'; no = paginaModelos(); }
+  else if (raiz === 'configuracoes') { titulo = 'Configurações'; no = paginaConfig(); carregarStatusFuncao().then((buscou) => { if (buscou) repintarSeAberta('configuracoes'); }); }
+  else { ir('visao-geral'); return; }
+  document.querySelector('.crumbs').replaceChildren(
+    h('span', 'opc', 'Meu espaço'), ...(mig.length ? [h('span', 'sepc opc', '/')] : [h('span', 'sepc opc', '/')]),
+    ...mig.flatMap(([t, r]) => [el('a', { href: '#/' + r, class: 'opc' }, t), h('span', 'sepc opc', '/')]),
+    h('span', 'atual', titulo));
+  pagina.replaceChildren(no);
+  if (!silencioso && chave !== rotaChave) window.scrollTo(0, 0);
+  rotaChave = chave;
+  atualizarSino();
+}
+function repintarSeAberta(raiz) {
+  const p = rotaAtual().partes;
+  if ((p[0] || 'visao-geral') === raiz && !dlg.open) {
+    const a = document.activeElement;
+    if (a && ['INPUT', 'TEXTAREA', 'SELECT'].includes(a.tagName)) return;
+    renderPagina(true);
   }
 }
-const enviadorOnline = () => S.conexao && S.conexao.enviador_visto_em && (Date.now() - new Date(S.conexao.enviador_visto_em).getTime() < 120000);
+function cabecalho(titulo, sub, ...acoes) {
+  return h('div', 'page-h row', h('div', 'grow', h('h1', '', titulo), sub ? h('p', 'sub', sub) : null), acoes.length ? h('div', 'acts', ...acoes) : null);
+}
+function vazio(icone, titulo, texto, ...botoes) {
+  return h('div', 'card vazio', h('div', 'tipoic', ico(icone, 26)), h('h3', '', titulo), h('p', 'muted', texto),
+    botoes.length ? h('div', 'row', { style: 'justify-content:center;margin-top:16px' }, ...botoes) : null);
+}
+const nomeDest = (ap) => { const g = S.grupos.find((x) => x.apelido === ap); return g ? g.nome_whatsapp : ap; };
+// Subtítulo do destinatário; mostra o apelido quando há dois grupos com o mesmo nome (ex.: "vendas" apontando para o grupo de teste).
+function subGrupo(g) {
+  if (ehContato(g)) return fmtNumero(g.jid.split('@')[0]);
+  const igual = S.grupos.some((x) => x.id !== g.id && !ehContato(x) && x.nome_whatsapp.trim().toLowerCase() === g.nome_whatsapp.trim().toLowerCase());
+  return (g.teste ? 'Grupo de teste' : 'Grupo do WhatsApp') + (igual ? ` · apelido: ${g.apelido}` : '');
+}
+const resumoDest = (m) => (m.grupos || []).map(nomeDest).join(', ');
+function icTipo(m) {
+  const cls = m.tipo === 'enquete' ? 'poll' : m.tipo === 'acao' ? 'act' : '';
+  const nome = m.tipo === 'enquete' ? 'poll' : m.tipo === 'acao' ? (m.acao === 'travar' ? 'lock' : 'unlock') : (m.imagem ? 'image' : 'send');
+  return h('div', 'tipoic ' + cls, ico(nome, 22));
+}
+const rotuloTipo = (m) => (m.tipo === 'enquete' ? 'Enquete' : m.tipo === 'acao' ? (m.acao === 'travar' ? 'Trancar grupo' : 'Abrir grupo') : (m.imagem ? 'Imagem' : 'Texto'));
 
-/* ================= telas ================= */
-function render() {
+/* ================= Visão geral ================= */
+function paginaVisao() {
+  const c = S.conexao || { status: 'desconectado' };
+  const sf = S.statusFuncao || {};
+  const conectado = c.status === 'conectado';
   const online = enviadorOnline();
-  const st = S.conexao ? S.conexao.status : 'desconectado';
-  const badge = el('span', { class: 'badge ' + (st === 'conectado' && online ? 'ok' : st === 'erro' ? 'bad' : 'warn'),
-    text: st === 'conectado' ? (online ? 'WhatsApp conectado' : 'Enviador offline') : 'WhatsApp ' + st.replace('_', ' ') });
-  const abas = [['agenda', 'Agenda'], ['grupos', 'Grupos'], ['historico', 'Histórico'], ['conexao', 'Conexão']];
-  app.replaceChildren(
-    el('header', { class: 'top' },
-      el('h1', { text: 'OnTime' }), badge, el('span', { class: 'spacer' }),
-      el('span', { class: 'muted small', text: (S.user.user_metadata && S.user.user_metadata.name) || S.user.email }),
-      el('button', { text: 'Alterar senha', onclick: dialogoSenha }),
-      el('button', { text: 'Sair', onclick: () => sb.auth.signOut() })),
-    el('main', {},
-      el('nav', { class: 'tabs', role: 'tablist' }, abas.map(([id, nome]) =>
-        el('button', { role: 'tab', 'aria-selected': String(S.tab === id), text: nome, onclick: () => { S.tab = id; render(); } }))),
-      el('div', { id: 'conteudo' })));
-  renderConteudo();
+  const ativas = S.msgs.filter((m) => m.ativo);
+  const hoje = hojeISO();
+  const deHoje = S.envios.filter((e) => isoDia(agoraBR(new Date(e.enviado_em))) === hoje);
+  const okHoje = deHoje.filter((e) => e.ok).length;
+  const falhasHoje = deHoje.length - okHoje;
+  const rotulo = { conectado: 'Conectado', desconectado: 'Desconectado', aguardando_codigo: 'Aguardando QR code', conectando: 'Conectando', erro: 'Com erro' }[c.status] || c.status;
+  const tom = conectado ? (online ? 'ok' : 'warn') : c.status === 'erro' ? 'bad' : 'warn';
+  const kpi = (icone, titulo, valor, sub, extra) => h('div', 'card kpi', h('div', 'top', ico(icone, 20), titulo), h('div', 'val', valor), h('div', 'sub', sub), extra || null);
+  const agendaLigada = sf.agenda_ativa === true;
+  const sw = el('button', { class: 'switch', type: 'button', role: 'switch', 'aria-checked': String(agendaLigada), 'aria-label': 'Agenda automática',
+    disabled: !conectado || S.statusFuncao === null, onclick: () => alternarAgenda(!agendaLigada) });
+  const proximos = ativas.map((m) => ({ m, p: proxima(m) })).filter((x) => x.p).sort((a, b) => a.p - b.p).slice(0, 6);
+  const recentes = S.envios.slice(0, 8);
+  const alertaAgenda = conectado && S.statusFuncao && !agendaLigada
+    ? h('div', 'notice', 'A agenda automática está desligada: nada é enviado sozinho. Ligue em Configurações ou no botão ao lado.') : null;
+  const alertaConexao = !conectado
+    ? h('div', 'notice bad row', h('span', 'grow', 'O WhatsApp não está conectado, então nenhuma mensagem será enviada.'),
+      el('button', { class: 'btn sm', onclick: () => ir('configuracoes') }, 'Conectar agora')) : null;
+  const alertaAgendador = conectado && !online && !S.demo
+    ? h('div', 'notice', 'O agendador não deu sinal nos últimos minutos. Se isso continuar, verifique o Supabase.') : null;
+  return h('div', '',
+    cabecalho('Visão geral', 'Acompanhe sua conexão e os próximos envios.',
+      el('button', { class: 'btn primary', onclick: () => ir('agendamentos/nova') }, ico('plus', 18), 'Nova mensagem')),
+    h('div', '', { style: 'display:grid;gap:10px;margin-bottom:18px' }, alertaConexao, alertaAgenda, alertaAgendador),
+    h('div', 'kpis',
+      kpi('phone', 'WhatsApp', h('span', 'chip ' + tom, h('span', 'dot'), rotulo), c.numero ? fmtNumero(c.numero) : (c.detalhe || 'Nenhum número conectado')),
+      kpi('repeat', 'Agenda automática', agendaLigada ? 'Ligada' : (S.statusFuncao ? 'Desligada' : '—'), agendaLigada ? 'Enviando nos horários' : 'Nada é enviado sozinho', h('div', { style: 'margin-top:10px' }, sw)),
+      kpi('calendar', 'Agendamentos ativos', String(ativas.length), `de ${S.msgs.length} no total`),
+      kpi('send', 'Envios hoje', String(okHoje), falhasHoje ? `${falhasHoje} com falha` : 'Nenhuma falha')),
+    h('div', 'cols',
+      h('div', 'card',
+        h('div', 'card-h', h('h2', '', 'Próximos envios'), el('a', { href: '#/agendamentos', class: 'linkbtn' }, 'Ver todos')),
+        proximos.length ? proximos.map(({ m, p }) => h('div', 'item', icTipo(m),
+          h('div', 'tx', h('div', 'titulo trunc', m.nome), h('div', 'muted small trunc', resumoDest(m))),
+          h('span', 'chip info tnum', fmtProx(p))))
+          : h('div', 'item muted', 'Nenhum envio programado. Crie sua primeira mensagem.')),
+      h('div', 'card',
+        h('div', 'card-h', h('h2', '', 'Atividade recente'), el('a', { href: '#/agendamentos?aba=historico', class: 'linkbtn', onclick: () => { S.aba = 'historico'; } }, 'Ver histórico')),
+        recentes.length ? recentes.map((e) => h('div', 'item',
+          h('span', 'chip ' + (e.ok ? 'ok' : 'bad'), e.ok ? 'Enviado' : 'Falhou'),
+          h('div', 'tx', h('div', 'trunc', e.mensagem), h('div', 'muted small trunc', `${e.grupo ? nomeDest(e.grupo) + ' · ' : ''}${e.detalhe || ''}`)),
+          h('span', 'muted small tnum nowrap', fmtDH(e.enviado_em))))
+          : h('div', 'item muted', 'Ainda não há envios registrados.'))));
 }
-function renderConteudo() {
-  const c = document.getElementById('conteudo');
-  if (!c) return;
-  const fn = { agenda: telaAgenda, grupos: telaGrupos, historico: telaHistorico, conexao: telaConexao }[S.tab];
-  c.replaceChildren(fn());
+async function alternarAgenda(ligar) {
+  if (ligar && !(await confirmar({ titulo: 'Ligar a agenda automática?', texto: 'As mensagens ativas passarão a ser enviadas nos horários marcados, para os destinatários escolhidos.', ok: 'Ligar' }))) return;
+  try { await chamarFuncao({ acao: 'agenda', ativa: ligar }); S.statusFuncao = { ...(S.statusFuncao || {}), agenda_ativa: ligar }; S.statusEm = Date.now(); aviso(ligar ? 'Agenda automática ligada.' : 'Agenda automática desligada.'); }
+  catch (e) { aviso('Não consegui alterar: ' + e.message, 'bad'); }
+  renderPagina(true);
 }
 
-/* ---- Agenda ---- */
-function telaAgenda() {
-  const agora = new Date();
+/* ================= Agendamentos (lista + histórico) ================= */
+function paginaLista() {
+  const abas = h('div', 'tabs', [['agendados', 'Agendados'], ['historico', 'Histórico']].map(([id, nome]) =>
+    el('button', { type: 'button', role: 'tab', 'aria-selected': String(S.aba === id), onclick: () => { S.aba = id; renderPagina(true); } }, nome)));
+  return h('div', '',
+    cabecalho('Agendamentos', 'Gerencie suas mensagens programadas.', el('button', { class: 'btn primary', onclick: () => ir('agendamentos/nova') }, ico('plus', 18), 'Nova mensagem')),
+    abas, S.aba === 'historico' ? blocoHistorico() : blocoAgendados());
+}
+function blocoAgendados() {
+  const agora = agoraBR();
+  const cont = { todos: S.msgs.length, ativos: S.msgs.filter((m) => m.ativo).length, rascunhos: S.msgs.filter((m) => !m.ativo).length };
   const lista = S.msgs
     .filter((m) => S.filtro === 'todos' || (S.filtro === 'ativos' ? m.ativo : !m.ativo))
-    .filter((m) => !S.busca || m.nome.toLowerCase().includes(S.busca.toLowerCase()))
-    .map((m) => ({ m, prox: m.ativo ? proxima(m, agora) : null }))
-    .sort((a, b) => (a.prox ? a.prox.getTime() : Infinity) - (b.prox ? b.prox.getTime() : Infinity) || a.m.nome.localeCompare(b.m.nome));
-  const proximos = lista.filter((x) => x.prox).slice(0, 6);
-  const busca = el('input', { type: 'text', placeholder: 'Buscar por nome', value: S.busca, 'aria-label': 'Buscar' });
-  busca.addEventListener('input', () => { S.busca = busca.value; const pos = busca.selectionStart; renderConteudo(); const n = document.querySelector('#conteudo input[type=text]'); if (n) { n.focus(); n.setSelectionRange(pos, pos); } });
-  const filtro = el('select', { 'aria-label': 'Filtro', onchange: (e) => { S.filtro = e.target.value; renderConteudo(); } },
-    ['todos', 'ativos', 'pausados'].map((v) => el('option', { value: v, selected: S.filtro === v, text: v[0].toUpperCase() + v.slice(1) })));
-  return el('div', {},
-    el('div', { class: 'row', style: 'margin-block:8px' },
-      el('div', { class: 'grow' }, busca),
-      el('div', { style: 'width:140px' }, filtro),
-      el('button', { text: 'Imagens (' + S.imgs.length + ')', onclick: dialogoImagens }),
-      el('button', { text: 'Exportar config.json', onclick: exportarConfig }),
-      el('button', { class: 'primary', text: 'Nova mensagem', onclick: () => dialogoMensagem(null) })),
-    proximos.length ? el('div', { class: 'card', style: 'margin-bottom:12px' },
-      el('div', { class: 'muted small', text: 'Próximos envios' }),
-      proximos.map((x) => el('div', { class: 'next' }, el('strong', { text: fmt(x.prox) }), '  ', x.m.nome))) : null,
-    el('div', { class: 'muted small', text: `${lista.length} item(ns)` }),
-    el('div', { class: 'list' }, lista.map(({ m, prox }) => cartaoMensagem(m, prox))));
+    .filter((m) => !S.busca || (m.nome + ' ' + resumoDest(m)).toLowerCase().includes(S.busca.toLowerCase()))
+    .map((m) => ({ m, p: m.ativo ? proxima(m, agora) : null }))
+    .sort((a, b) => (a.p ? a.p.getTime() : Infinity) - (b.p ? b.p.getTime() : Infinity) || a.m.nome.localeCompare(b.m.nome));
+  const busca = el('input', { class: 'inp', type: 'text', placeholder: 'Buscar por nome ou destinatário', value: S.busca, 'aria-label': 'Buscar' });
+  busca.addEventListener('input', () => {
+    S.busca = busca.value; const pos = busca.selectionStart;
+    renderPagina(true);
+    const n = document.querySelector('.search input'); if (n) { n.focus(); n.setSelectionRange(pos, pos); }
+  });
+  const pills = [['todos', 'Todos'], ['ativos', 'Ativos'], ['rascunhos', 'Rascunhos']].map(([id, nome]) =>
+    el('button', { class: 'pill', type: 'button', 'aria-pressed': String(S.filtro === id), onclick: () => { S.filtro = id; renderPagina(true); } }, `${nome} (${cont[id]})`));
+  if (!S.msgs.length) return vazio('calendar', 'Nenhum agendamento ainda', 'Crie sua primeira mensagem e escolha quando enviar.',
+    el('button', { class: 'btn primary', onclick: () => ir('agendamentos/nova') }, ico('plus', 18), 'Nova mensagem'));
+  return h('div', '',
+    h('div', 'filters', h('div', 'search', ico('search', 18), busca), pills),
+    lista.length ? h('div', 'card lista', lista.map(({ m, p }) => linhaMensagem(m, p)))
+      : vazio('search', 'Nada encontrado', 'Tente outro filtro ou outro termo de busca.'));
 }
-function cartaoMensagem(m, prox) {
-  const tipo = { mensagem: 'Mensagem', enquete: 'Enquete', acao: m.acao === 'travar' ? 'Trancar grupo' : 'Abrir grupo' }[m.tipo];
-  return el('div', { class: 'card item' + (m.ativo ? '' : ' off') },
-    el('div', {},
-      el('h3', { text: m.nome }),
-      el('div', { class: 'small' }, el('strong', { class: 'next', text: (m.horarios || []).join(' · ') }), ' — ', resumoDias(m)),
-      el('div', { class: 'badges' },
-        el('span', { class: 'badge', text: tipo }),
-        (m.grupos || []).map((g) => el('span', { class: 'badge', text: g })),
-        m.imagem ? el('span', { class: 'badge', text: '🖼 ' + m.imagem }) : null,
-        m.ativo ? (prox ? el('span', { class: 'badge ok next', text: 'próximo: ' + fmt(prox) }) : el('span', { class: 'badge warn', text: 'sem próxima data' }))
-                : el('span', { class: 'badge warn', text: 'pausada' }))),
-    el('div', { class: 'actions' },
-      el('button', { text: m.ativo ? 'Pausar' : 'Ativar', onclick: async () => { await sb.from('wpp_mensagens').update({ ativo: !m.ativo }).eq('id', m.id); await carregarTudo(); renderConteudo(); } }),
-      el('button', { text: 'Editar', onclick: () => dialogoMensagem(m) }),
-      el('button', { text: 'Duplicar', onclick: () => dialogoMensagem({ ...m, id: null, nome: m.nome + ' (cópia)' }) })));
+function linhaMensagem(m, prox) {
+  const testeDest = (m.grupos || []).map((a) => S.grupos.find((g) => g.apelido === a)).find((g) => g && g.teste);
+  const acoes = h('div', 'acoes',
+    el('button', { class: 'ibtn', type: 'button', title: 'Editar', 'aria-label': 'Editar', onclick: () => ir('agendamentos/' + m.id) }, ico('edit', 18)),
+    el('button', { class: 'ibtn', type: 'button', title: 'Duplicar', 'aria-label': 'Duplicar', onclick: () => ir('agendamentos/nova?copiar=' + m.id) }, ico('copy', 18)),
+    el('button', { class: 'ibtn', type: 'button', title: m.ativo ? 'Pausar' : 'Ativar', 'aria-label': m.ativo ? 'Pausar' : 'Ativar', onclick: async () => {
+      try { await D().ativar(m.id, !m.ativo); await recarregar(); renderPagina(true); aviso(m.ativo ? 'Movido para rascunhos.' : 'Agendamento ativado.'); } catch (e) { aviso(e.message, 'bad'); }
+    } }, ico(m.ativo ? 'pause' : 'play', 18)),
+    el('button', { class: 'ibtn danger', type: 'button', title: 'Excluir', 'aria-label': 'Excluir', onclick: () => excluirMensagem(m) }, ico('trash', 18)));
+  if (testeDest) acoes.prepend(el('button', { class: 'ibtn', type: 'button', title: 'Enviar agora (grupo de teste)', 'aria-label': 'Enviar agora', onclick: () => testarAgora(m, testeDest.apelido) }, ico('send', 18)));
+  return h('div', 'linha' + (m.ativo ? '' : ' off'),
+    icTipo(m),
+    h('div', '', h('div', 'titulo trunc', m.nome), h('div', 'muted small trunc', `${rotuloTipo(m)} · ${resumoDest(m)}`)),
+    h('div', 'quando', h('div', 'small', frequencia(m)),
+      m.ativo ? (prox ? h('div', 'muted small', 'Próximo: ' + fmtProx(prox)) : h('div', 'muted small', 'Sem próxima data')) : null),
+    m.ativo ? h('span', 'chip ok', 'Ativo') : h('span', 'chip', 'Rascunho'),
+    acoes);
+}
+async function excluirMensagem(m) {
+  if (!(await confirmar({ titulo: 'Excluir agendamento?', texto: `"${m.nome}" será removido definitivamente.`, ok: 'Excluir', perigo: true }))) return;
+  try { await D().excluirMensagem(m.id); await recarregar(); aviso('Agendamento excluído.'); if (rotaAtual().partes[1]) ir('agendamentos'); else renderPagina(true); }
+  catch (e) { aviso(e.message, 'bad'); }
+}
+async function testarAgora(m, grupo) {
+  aviso('Enviando para o grupo de teste…');
+  try { const r = await chamarFuncao({ acao: 'enviar_agora', mensagem_id: m.id, grupo }); aviso(`Enviado (${r.detalhe}) em ${Math.round((r.total_ms || 0) / 100) / 10} s.`); await recarregar(); renderPagina(true); }
+  catch (e) { aviso('Erro no envio: ' + e.message, 'bad'); }
+}
+function blocoHistorico() {
+  if (!S.envios.length) return vazio('clock', 'Nenhum envio registrado', 'Cada mensagem, enquete e ação enviada aparece aqui.');
+  return h('div', 'card scroll', el('table', { class: 'tbl' },
+    h('thead', '', h('tr', '', ['Quando', 'Mensagem', 'Destinatário', 'Resultado'].map((t) => el('th', {}, t)))),
+    h('tbody', '', S.envios.map((e) => h('tr', '',
+      el('td', { class: 'tnum nowrap' }, fmtDH(e.enviado_em)), el('td', {}, e.mensagem), el('td', {}, e.grupo ? nomeDest(e.grupo) : '—'),
+      el('td', {}, h('span', 'chip ' + (e.ok ? 'ok' : 'bad'), e.ok ? 'Enviado' : 'Falhou'), e.detalhe ? h('div', 'muted small', e.detalhe) : null))))));
 }
 
-/* ---- Diálogo de mensagem ---- */
-function dialogoMensagem(m) {
-  const novo = !m || !m.id;
-  const v = m || { nome: '', tipo: 'mensagem', ativo: true, grupos: [], horarios: [], dias: TODOS.slice(), data: null, textos: [], ordem: 'aleatoria', imagem: null, enquete: null, acao: null };
-  const f = {};
-  const secao = (id, ...kids) => el('div', { id, 'data-sec': id }, kids);
-  f.nome = el('input', { type: 'text', value: v.nome, id: 'm-nome' });
-  f.tipo = el('select', { id: 'm-tipo' }, [['mensagem', 'Mensagem (texto e/ou imagem)'], ['enquete', 'Enquete'], ['acao', 'Abrir ou trancar o grupo']].map(([k, t]) => el('option', { value: k, selected: v.tipo === k, text: t })));
-  f.ativo = el('input', { type: 'checkbox', id: 'm-ativo', checked: v.ativo });
-  f.grupos = S.grupos.map((g) => ({ g, cb: el('input', { type: 'checkbox', checked: (v.grupos || []).includes(g.apelido) }) }));
-  f.horarios = el('input', { type: 'text', value: (v.horarios || []).join(', '), placeholder: '09:00, 15:30', id: 'm-horarios' });
-  f.dias = TODOS.map((d) => ({ d, cb: el('input', { type: 'checkbox', checked: (v.dias || []).includes(d) }) }));
-  f.data = el('input', { type: 'date', value: v.data || '', id: 'm-data' });
-  f.textos = el('textarea', { id: 'm-textos', placeholder: 'Escreva o texto. Para ter variações, separe com uma linha contendo apenas ---' }, '');
-  f.textos.value = (v.textos || []).join('\n---\n');
-  f.ordem = el('select', { id: 'm-ordem' }, [['aleatoria', 'Sortear uma variação'], ['sequencial', 'Alternar na ordem']].map(([k, t]) => el('option', { value: k, selected: v.ordem === k, text: t })));
-  f.imagem = el('select', { id: 'm-imagem' }, el('option', { value: '', text: 'Sem imagem' }),
-    S.imgs.map((i) => el('option', { value: i.name, selected: v.imagem === i.name, text: i.name })));
-  if (v.imagem && !S.imgs.some((i) => i.name === v.imagem)) f.imagem.append(el('option', { value: v.imagem, selected: true, text: v.imagem + ' (não enviada)' }));
-  const e = v.enquete || { pergunta: '', opcoes: [], multipla: false };
-  f.pergunta = el('input', { type: 'text', value: e.pergunta, id: 'm-perg' });
-  f.opcoes = el('textarea', { id: 'm-opc', placeholder: 'Uma opção por linha (de 2 a 12)' }, ''); f.opcoes.value = (e.opcoes || []).join('\n');
-  f.multipla = el('input', { type: 'checkbox', checked: e.multipla });
-  f.acao = el('select', { id: 'm-acao' }, [['liberar', 'Abrir (todos podem escrever)'], ['travar', 'Trancar (só admins escrevem)']].map(([k, t]) => el('option', { value: k, selected: v.acao === k, text: t })));
-  const erro = el('div', { class: 'notice bad', hidden: true });
-  const preset = (lista) => () => f.dias.forEach((x) => { x.cb.checked = lista.includes(x.d); });
-
-  const sMsg = secao('s-mensagem',
-    el('label', { class: 'f', for: 'm-textos', text: 'Texto' }), f.textos,
-    el('label', { class: 'f', for: 'm-ordem', text: 'Quando houver variações' }), f.ordem,
-    el('label', { class: 'f', for: 'm-imagem', text: 'Imagem (opcional)' }), f.imagem,
-    el('div', { class: 'muted small', text: 'O texto vira a legenda da imagem. Imagens novas se enviam em "Imagens".' }));
-  const sEnq = secao('s-enquete',
-    el('label', { class: 'f', for: 'm-perg', text: 'Pergunta' }), f.pergunta,
-    el('label', { class: 'f', for: 'm-opc', text: 'Opções' }), f.opcoes,
-    el('label', { class: 'checks' }, f.multipla, ' Permitir mais de uma resposta'));
-  const sAcao = secao('s-acao', el('label', { class: 'f', for: 'm-acao', text: 'Ação' }), f.acao);
-  const mostrar = () => { sMsg.hidden = f.tipo.value !== 'mensagem'; sEnq.hidden = f.tipo.value !== 'enquete'; sAcao.hidden = f.tipo.value !== 'acao'; };
-  f.tipo.addEventListener('change', mostrar); mostrar();
-
-  const coletar = () => {
-    const horarios = f.horarios.value.split(/[,;\s]+/).map((s) => s.trim()).filter(Boolean);
-    const ruim = horarios.find((h) => !HHMM.test(h));
-    if (ruim) throw new Error(`Horário inválido: "${ruim}". Use o formato 09:00.`);
-    if (!f.nome.value.trim()) throw new Error('Dê um nome para a mensagem.');
-    const grupos = f.grupos.filter((x) => x.cb.checked).map((x) => x.g.apelido);
-    if (!grupos.length) throw new Error('Escolha pelo menos um grupo.');
-    if (!horarios.length) throw new Error('Informe pelo menos um horário.');
-    const dias = f.dias.filter((x) => x.cb.checked).map((x) => x.d);
-    if (!f.data.value && !dias.length) throw new Error('Escolha os dias da semana ou uma data.');
-    const tipo = f.tipo.value;
-    const row = {
-      nome: f.nome.value.trim(), tipo, ativo: f.ativo.checked, grupos,
-      horarios: horarios.map((h) => { const x = HHMM.exec(h); return `${two(+x[1])}:${x[2]}`; }),
-      dias: dias.length ? dias : TODOS.slice(), data: f.data.value || null,
-      textos: [], ordem: f.ordem.value, imagem: null, enquete: null, acao: null,
-    };
-    if (tipo === 'mensagem') {
-      row.textos = f.textos.value.split(/\n-{3,}\n/).map((t) => t.trim()).filter(Boolean);
-      if (!row.textos.length) throw new Error('Escreva o texto da mensagem.');
-      if (row.textos.some((t) => t.length > (f.imagem.value ? 1024 : 4000))) throw new Error(f.imagem.value ? 'Com imagem, cada texto pode ter no máximo 1024 caracteres.' : 'Texto muito longo (máximo 4000).');
-      row.imagem = f.imagem.value || null;
-    } else if (tipo === 'enquete') {
-      const opcoes = f.opcoes.value.split('\n').map((s) => s.trim()).filter(Boolean);
-      if (!f.pergunta.value.trim()) throw new Error('Escreva a pergunta da enquete.');
-      if (opcoes.length < 2 || opcoes.length > 12) throw new Error('A enquete precisa de 2 a 12 opções.');
-      row.enquete = { pergunta: f.pergunta.value.trim(), opcoes, multipla: f.multipla.checked };
-    } else row.acao = f.acao.value;
-    return row;
-  };
-  const salvar = async (ev) => {
-    ev.preventDefault(); erro.hidden = true;
-    try {
-      const row = coletar();
-      const r = novo ? await sb.from('wpp_mensagens').insert(row) : await sb.from('wpp_mensagens').update(row).eq('id', v.id);
-      if (r.error) throw new Error(r.error.message.includes('duplicate') ? 'Já existe uma mensagem com esse nome.' : r.error.message);
-      dlg.close(); await carregarTudo(); renderConteudo();
-    } catch (err) { erro.textContent = err.message; erro.hidden = false; }
-  };
-  const apagar = async () => {
-    if (!confirm('Excluir "' + v.nome + '" definitivamente?')) return;
-    const r = await sb.from('wpp_mensagens').delete().eq('id', v.id);
-    if (r.error) { erro.textContent = r.error.message; erro.hidden = false; return; }
-    dlg.close(); await carregarTudo(); renderConteudo();
-  };
-  const testar = el('div', {});
-  if (!novo) {
-    const sel = el('select', {}, S.grupos.filter((g) => g.teste).map((g) => el('option', { value: g.apelido, text: g.apelido + ' — ' + g.nome_whatsapp })));
-    const st = el('span', { class: 'muted small' });
-    testar.append(el('label', { class: 'f', text: 'Testar agora em um grupo de teste' }),
-      el('div', { class: 'row' }, el('div', { class: 'grow' }, sel),
-        el('button', { type: 'button', text: 'Enviar agora', disabled: !S.grupos.some((g) => g.teste), onclick: async () => {
-          st.textContent = 'Enviando…';
-          try { const r = await chamarFuncao({ acao: 'enviar_agora', mensagem_id: v.id, grupo: sel.value }); st.textContent = 'Enviado (' + r.detalhe + ') em ' + Math.round(r.total_ms / 100) / 10 + ' s.'; }
-          catch (e) { st.textContent = 'Erro: ' + e.message; }
-        } })), st);
+/* ================= Nova mensagem / Editar ================= */
+function formNovo() {
+  return { id: null, nome: '', tipo: 'mensagem', ativo: true, destTipo: 'grupo', dest: [], textos: [''], ordem: 'aleatoria', imagem: null,
+    pergunta: '', opcoes: '', multipla: false, acao: 'liberar', inicio: amanhaISO(), horarios: ['09:00'], repetir: 'diario',
+    diasCustom: UTEIS.slice(), fimTipo: 'nunca', fim: '' };
+}
+function formDe(m) {
+  const sem = soSemana(m.dias);
+  let repetir = 'custom';
+  if (m.data) repetir = 'nao'; else if (sem.length === 7) repetir = 'diario'; else if (setIgual(sem, UTEIS)) repetir = 'uteis'; else if (setIgual(sem, FIMSEM)) repetir = 'fim';
+  const e = m.enquete || {};
+  const primeiro = S.grupos.find((g) => g.apelido === (m.grupos || [])[0]);
+  const fim = tok(m.dias, 'termino:');
+  return { id: m.id, nome: m.nome, tipo: m.tipo, ativo: m.ativo, destTipo: ehContato(primeiro) ? 'contato' : 'grupo', dest: (m.grupos || []).slice(),
+    textos: (m.textos && m.textos.length) ? m.textos.slice() : [''], ordem: m.ordem || 'aleatoria', imagem: m.imagem || null,
+    pergunta: e.pergunta || '', opcoes: (e.opcoes || []).join('\n'), multipla: !!e.multipla, acao: m.acao || 'liberar',
+    inicio: m.data || tok(m.dias, 'inicio:') || hojeISO(), horarios: (m.horarios && m.horarios.length) ? m.horarios.slice() : ['09:00'],
+    repetir, diasCustom: sem.length ? sem : UTEIS.slice(), fimTipo: fim ? 'data' : 'nunca', fim: fim || '' };
+}
+function formParaRegistro(F, ativo) {
+  if (!F.dest.length) throw new Error('Escolha o destinatário.');
+  const horarios = [...new Set(F.horarios.map((x) => x.trim()).filter(Boolean))];
+  if (!horarios.length) throw new Error('Informe pelo menos um horário.');
+  const ruim = horarios.find((x) => !HHMM.test(x));
+  if (ruim) throw new Error(`Horário inválido: "${ruim}".`);
+  const hh = horarios.map((x) => { const m = HHMM.exec(x); return `${two(+m[1])}:${m[2]}`; }).sort();
+  if (!F.inicio) throw new Error('Escolha a data de início.');
+  let data = null, dias = TODOS.slice();
+  if (F.repetir === 'nao') data = F.inicio;
+  else {
+    const sel = F.repetir === 'diario' ? TODOS : F.repetir === 'uteis' ? UTEIS : F.repetir === 'fim' ? FIMSEM : F.diasCustom;
+    if (!sel.length) throw new Error('Escolha pelo menos um dia da semana.');
+    dias = TODOS.filter((d) => sel.includes(d));
+    dias.push('inicio:' + F.inicio);
+    if (F.fimTipo === 'data') {
+      if (!F.fim) throw new Error('Escolha a data final da repetição.');
+      if (F.fim < F.inicio) throw new Error('A data final não pode ser antes da data de início.');
+      dias.push('termino:' + F.fim);
+    }
   }
-  dlg.replaceChildren(el('form', { method: 'dialog', onsubmit: salvar },
-    el('div', { class: 'hd', text: novo ? 'Nova mensagem' : 'Editar mensagem' }),
-    el('div', { class: 'bd' },
-      el('label', { class: 'f', for: 'm-nome', text: 'Nome' }), f.nome,
-      el('label', { class: 'f', for: 'm-tipo', text: 'Tipo' }), f.tipo,
-      el('label', { class: 'checks', style: 'margin-top:10px' }, f.ativo, ' Ativa'),
-      el('label', { class: 'f', text: 'Grupos' }),
-      el('div', { class: 'checks' }, f.grupos.map((x) => el('label', {}, x.cb, ' ' + x.g.apelido + (x.g.teste ? ' (teste)' : '')))),
-      el('label', { class: 'f', for: 'm-horarios', text: 'Horários (separe por vírgula)' }), f.horarios,
-      el('label', { class: 'f', text: 'Dias da semana' }),
-      el('div', { class: 'checks' }, f.dias.map((x) => el('label', {}, x.cb, ' ' + DIA_LABEL[x.d]))),
-      el('div', { class: 'row', style: 'margin-top:8px' },
-        el('button', { type: 'button', text: 'Todos', onclick: preset(TODOS) }),
-        el('button', { type: 'button', text: 'Dias úteis', onclick: preset(['seg', 'ter', 'qua', 'qui', 'sex']) }),
-        el('button', { type: 'button', text: 'Fim de semana', onclick: preset(['sab', 'dom']) })),
-      el('label', { class: 'f', for: 'm-data', text: 'Ou enviar uma única vez em uma data (ignora os dias)' }), f.data,
-      sMsg, sEnq, sAcao, testar, erro),
-    el('div', { class: 'ft' },
-      novo ? null : el('button', { type: 'button', class: 'danger', text: 'Excluir', onclick: apagar }),
-      el('span', { class: 'grow' }),
-      el('button', { type: 'button', text: 'Cancelar', onclick: () => dlg.close() }),
-      el('button', { class: 'primary', type: 'submit', text: 'Salvar' }))));
-  dlg.showModal();
+  if (ativo && data) {
+    const alvo = new Date(`${data}T${hh[hh.length - 1]}:00`);
+    if (alvo.getTime() < agoraBR().getTime() - 10 * 60000) throw new Error('Essa data e horário já passaram. Escolha um momento futuro.');
+  }
+  const row = { nome: '', tipo: F.tipo, ativo, grupos: F.dest.slice(), horarios: hh, dias, data, textos: [], ordem: F.ordem, imagem: null, enquete: null, acao: null };
+  if (F.tipo === 'mensagem') {
+    row.textos = F.textos.map((t) => t.trim()).filter(Boolean);
+    if (!row.textos.length) throw new Error('Escreva a mensagem.');
+    row.imagem = F.imagem || null;
+    const max = row.imagem ? 1024 : 4000;
+    if (row.textos.some((t) => t.length > max)) throw new Error(row.imagem ? 'Com anexo, a mensagem pode ter no máximo 1024 caracteres.' : 'Mensagem muito longa (máximo 4000 caracteres).');
+  } else if (F.tipo === 'enquete') {
+    const opcoes = F.opcoes.split('\n').map((s) => s.trim()).filter(Boolean);
+    if (!F.pergunta.trim()) throw new Error('Escreva a pergunta da enquete.');
+    if (opcoes.length < 2 || opcoes.length > 12) throw new Error('A enquete precisa de 2 a 12 opções.');
+    row.enquete = { pergunta: F.pergunta.trim(), opcoes, multipla: F.multipla };
+  } else row.acao = F.acao;
+  // nome interno: o que o usuário digitou ou um nome gerado a partir do conteúdo
+  let nome = F.nome.trim();
+  if (!nome) {
+    const quem = nomeDest(F.dest[0]);
+    nome = F.tipo === 'mensagem' ? row.textos[0].replace(/\s+/g, ' ').slice(0, 40)
+      : F.tipo === 'enquete' ? 'Enquete: ' + F.pergunta.trim().slice(0, 30) : `${F.acao === 'travar' ? 'Trancar' : 'Abrir'} grupo: ${quem}`;
+    let n = 2; const base = nome;
+    while (S.msgs.some((m) => m.nome === nome && m.id !== F.id)) nome = `${base} (${n++})`;
+  } else if (S.msgs.some((m) => m.nome === nome && m.id !== F.id)) throw new Error('Já existe um agendamento com esse nome. Escolha outro.');
+  row.nome = nome;
+  return row;
 }
 
-/* ---- Alterar senha ---- */
-function dialogoSenha() {
-  const a = el('input', { type: 'password', id: 'ns-a', autocomplete: 'new-password' });
-  const b = el('input', { type: 'password', id: 'ns-b', autocomplete: 'new-password' });
-  const msg = el('div', { class: 'notice bad', hidden: true });
-  const salvar = async (ev) => {
-    ev.preventDefault(); msg.hidden = true; msg.className = 'notice bad';
-    const erro = a.value.length < 10 ? 'Use pelo menos 10 caracteres.'
-      : /^\d+$/.test(a.value) ? 'Misture letras e números (só números é fácil de adivinhar).'
-      : a.value !== b.value ? 'As duas senhas não são iguais.' : null;
-    if (erro) { msg.textContent = erro; msg.hidden = false; return; }
-    const { error } = await sb.auth.updateUser({ password: a.value });
-    if (error) { msg.textContent = error.message; msg.hidden = false; return; }
-    msg.className = 'notice ok'; msg.textContent = 'Senha alterada.'; msg.hidden = false;
-    setTimeout(() => dlg.close(), 1200);
+function paginaForm(id) {
+  const q = rotaAtual().q;
+  const base = id ? S.msgs.find((m) => m.id === id) : null;
+  if (id && !base) return vazio('alert', 'Agendamento não encontrado', 'Ele pode ter sido excluído.', el('a', { class: 'btn', href: '#/agendamentos' }, 'Voltar'));
+  const copia = !base && q.get('copiar') ? S.msgs.find((m) => m.id === q.get('copiar')) : null;
+  const F = base ? formDe(base) : copia ? { ...formDe(copia), id: null, nome: copia.nome + ' (cópia)', ativo: true } : formNovo();
+  const modelo = !base && !copia && q.get('modelo') ? S.modelos.find((t) => t.id === q.get('modelo')) : null;
+  if (modelo) { F.textos = [modelo.texto]; F.imagem = modelo.imagem || null; }
+  const erro = h('div', 'notice bad'); erro.hidden = true;
+  const refs = {};
+  const refresh = () => { pintarPreview(); pintarResumo(); };
+
+  /* --- destinatário --- */
+  const destBox = h('div', '');
+  const tabs = h('div', 'seg');
+  const pintarTabs = () => tabs.replaceChildren(
+    el('button', { type: 'button', 'aria-pressed': String(F.destTipo === 'contato'), onclick: () => { F.destTipo = 'contato'; pintarTabs(); pintarDest(); } }, ico('user', 18), 'Contato individual'),
+    el('button', { type: 'button', 'aria-pressed': String(F.destTipo === 'grupo'), onclick: () => { F.destTipo = 'grupo'; pintarTabs(); pintarDest(); } }, ico('users', 18), 'Grupo'));
+  const escolherDest = (ancora, indice) => {
+    const usados = F.dest.filter((_, i) => i !== indice);
+    const op = S.grupos.filter((g) => (F.destTipo === 'contato') === ehContato(g) && !usados.includes(g.apelido));
+    const itens = op.map((g) => ({ titulo: g.nome_whatsapp, sub: subGrupo(g), icone: ehContato(g) ? 'user' : 'users',
+      onclick: () => { if (indice === null) F.dest.push(g.apelido); else F.dest[indice] = g.apelido; pintarDest(); refresh(); } }));
+    if (!itens.length) itens.push({ cabecalho: true, titulo: F.destTipo === 'contato' ? 'Nenhum contato cadastrado' : 'Nenhum grupo disponível' });
+    itens.push({ sep: true });
+    if (F.destTipo === 'contato') itens.push({ titulo: 'Adicionar contato…', icone: 'plus', onclick: () => dialogoContato((ap) => { F.dest.push(ap); pintarDest(); refresh(); }) });
+    else itens.push({ titulo: 'Gerenciar grupos', icone: 'users', onclick: () => ir('contatos') });
+    abrirMenu(ancora, itens, { largura: ancora.getBoundingClientRect().width });
   };
-  dlg.replaceChildren(el('form', { method: 'dialog', onsubmit: salvar },
-    el('div', { class: 'hd', text: 'Alterar senha' }),
-    el('div', { class: 'bd' },
-      el('label', { class: 'f', for: 'ns-a', text: 'Nova senha' }), a,
-      el('label', { class: 'f', for: 'ns-b', text: 'Repita a nova senha' }), b, msg),
-    el('div', { class: 'ft' },
-      el('button', { type: 'button', text: 'Cancelar', onclick: () => dlg.close() }),
-      el('button', { class: 'primary', type: 'submit', text: 'Salvar' }))));
-  dlg.showModal();
+  const cartaoDest = (ap, i) => {
+    const g = S.grupos.find((x) => x.apelido === ap);
+    const nome = g ? g.nome_whatsapp : ap;
+    const sub = g ? (ehContato(g) ? 'Contato do WhatsApp' : subGrupo(g)) : 'Destinatário removido';
+    const card = el('button', { class: 'dest', type: 'button', onclick: (e) => escolherDest(e.currentTarget, i) },
+      h('span', 'avatar', ico(g && ehContato(g) ? 'user' : 'users', 22)),
+      h('span', 'tx', h('span', 't trunc', nome), h('span', 's', sub)), ico('down', 20));
+    return h('div', 'dest-wrap', card, F.dest.length > 1
+      ? el('button', { class: 'ibtn', type: 'button', 'aria-label': 'Remover destinatário', onclick: () => { F.dest.splice(i, 1); pintarDest(); refresh(); } }, ico('x', 18)) : null);
+  };
+  const pintarDest = () => {
+    if (!F.dest.length) {
+      destBox.replaceChildren(el('button', { class: 'dest', type: 'button', onclick: (e) => escolherDest(e.currentTarget, null) },
+        h('span', 'avatar', ico(F.destTipo === 'contato' ? 'user' : 'users', 22)),
+        h('span', 'tx', h('span', 't', F.destTipo === 'contato' ? 'Selecionar contato' : 'Selecionar grupo'), h('span', 's', 'Toque para escolher')), ico('down', 20)));
+    } else destBox.replaceChildren(...F.dest.map(cartaoDest),
+      el('button', { class: 'linkbtn', type: 'button', style: 'margin-top:10px', onclick: (e) => escolherDest(e.currentTarget, null) }, ico('plus', 16), 'Adicionar outro destinatário'));
+  };
+
+  /* --- conteúdo --- */
+  const tipos = h('div', 'seg');
+  const corpo = h('div', '');
+  const pintarTipos = () => tipos.replaceChildren(...[['mensagem', 'send', 'Mensagem'], ['enquete', 'poll', 'Enquete'], ['acao', 'lock', 'Abrir/trancar']].map(([k, ic, t]) =>
+    el('button', { type: 'button', 'aria-pressed': String(F.tipo === k), onclick: () => { F.tipo = k; pintarTipos(); pintarCorpo(); refresh(); } }, ico(ic, 18), t)));
+  const contador = (ta, span) => { const max = F.imagem ? 1024 : 4000; const n = ta.value.length; span.textContent = `${n}/${max}`; span.className = 'count' + (n > max ? ' bad' : ''); };
+  const pintarCorpo = () => {
+    const nomeCampo = h('div', 'field',
+      el('label', { class: 'lbl', for: 'f-nome' }, 'Nome do agendamento (opcional)'),
+      el('input', { class: 'inp', id: 'f-nome', type: 'text', value: F.nome, placeholder: 'Ex.: Bom dia — grupo de vendas', maxlength: '80', oninput: (e) => { F.nome = e.target.value; } }));
+    if (F.tipo === 'mensagem') {
+      refs.contadores = [];
+      const variacoes = h('div', '');
+      const pintarVar = () => {
+        refs.contadores = [];
+        variacoes.replaceChildren(...F.textos.map((t, i) => {
+          const ta = el('textarea', { class: 'txt', id: 'f-texto-' + i, placeholder: i === 0 ? 'Escreva a mensagem que será enviada…' : 'Outra versão da mensagem…', rows: '4' });
+          ta.value = t;
+          const cont = h('span', 'count');
+          ta.addEventListener('input', () => { F.textos[i] = ta.value; contador(ta, cont); refresh(); });
+          refs.contadores.push([ta, cont]); contador(ta, cont);
+          return h('div', 'vary',
+            h('div', 'head', el('label', { class: 'lbl', for: 'f-texto-' + i, style: 'margin:0' }, i === 0 ? 'Mensagem' : `Variação ${i + 1}`),
+              h('span', 'row', { style: 'gap:6px' }, cont, i > 0 ? el('button', { class: 'ibtn', type: 'button', 'aria-label': 'Remover variação', onclick: () => { F.textos.splice(i, 1); pintarVar(); refresh(); } }, ico('x', 16)) : null)),
+            ta);
+        }),
+        el('div', { class: 'row', style: 'margin-top:10px' },
+          el('button', { class: 'linkbtn', type: 'button', onclick: () => { F.textos.push(''); pintarVar(); } }, ico('plus', 16), 'Adicionar variação'),
+          F.textos.length > 1 ? el('select', { class: 'sel', style: 'width:auto;padding-block:8px', 'aria-label': 'Ordem das variações', onchange: (e) => { F.ordem = e.target.value; } },
+            el('option', { value: 'aleatoria', selected: F.ordem === 'aleatoria' }, 'Sortear uma variação'),
+            el('option', { value: 'sequencial', selected: F.ordem === 'sequencial' }, 'Alternar na ordem')) : null));
+      };
+      pintarVar();
+      const anexo = h('div', '');
+      refs.pintarAnexo = async () => {
+        if (!F.imagem) { anexo.replaceChildren(el('button', { class: 'linkbtn', type: 'button', style: 'margin-top:10px', onclick: abrirAnexos }, ico('clip', 18), 'Adicionar anexo')); return; }
+        const img = el('img', { alt: F.imagem });
+        D().urlImagem(F.imagem).then((u) => { if (u) img.src = u; });
+        anexo.replaceChildren(h('div', 'anexo', img, h('div', 'grow', h('div', 'trunc', { style: 'font-weight:600' }, F.imagem), h('div', 'muted small', 'Anexo — o texto vira a legenda')),
+          el('button', { class: 'ibtn', type: 'button', 'aria-label': 'Trocar anexo', onclick: abrirAnexos }, ico('edit', 18)),
+          el('button', { class: 'ibtn', type: 'button', 'aria-label': 'Remover anexo', onclick: () => { F.imagem = null; refs.pintarAnexo(); refresh(); refs.contadores.forEach(([ta, c]) => contador(ta, c)); } }, ico('x', 18))));
+      };
+      const abrirAnexos = () => dialogoImagens((nome) => { F.imagem = nome; refs.pintarAnexo(); refresh(); refs.contadores.forEach(([ta, c]) => contador(ta, c)); });
+      refs.pintarAnexo();
+      const usarModelo = el('button', { class: 'linkbtn', type: 'button', onclick: (e) => {
+        const itens = S.modelos.length ? S.modelos.map((t) => ({ titulo: t.nome, sub: t.texto.slice(0, 60), icone: 'file', onclick: () => {
+          F.textos[0] = t.texto; if (t.imagem) F.imagem = t.imagem;
+          pintarCorpo(); refresh(); } }))
+          : [{ cabecalho: true, titulo: 'Nenhum modelo salvo' }, { titulo: 'Criar um modelo', icone: 'plus', onclick: () => ir('modelos') }];
+        abrirMenu(e.currentTarget, itens, { alinhar: 'right', largura: 280 });
+      } }, ico('file', 18), 'Usar modelo');
+      corpo.replaceChildren(nomeCampo,
+        h('div', 'row', { style: 'justify-content:space-between;margin:18px 0 8px' }, h('h2', 'sec-t', { style: 'margin:0' }, 'Mensagem'), usarModelo),
+        variacoes, anexo);
+    } else if (F.tipo === 'enquete') {
+      const opc = el('textarea', { class: 'txt', id: 'f-opc', placeholder: 'Uma opção por linha (de 2 a 12)', rows: '5' }); opc.value = F.opcoes;
+      opc.addEventListener('input', () => { F.opcoes = opc.value; refresh(); });
+      corpo.replaceChildren(nomeCampo,
+        h('h2', 'sec-t', { style: 'margin:18px 0 8px' }, 'Enquete'),
+        h('div', 'field', el('label', { class: 'lbl', for: 'f-perg' }, 'Pergunta'),
+          el('input', { class: 'inp', id: 'f-perg', type: 'text', value: F.pergunta, placeholder: 'Ex.: Qual horário você prefere?', oninput: (e) => { F.pergunta = e.target.value; refresh(); } })),
+        h('div', 'field', el('label', { class: 'lbl', for: 'f-opc' }, 'Opções'), opc),
+        h('label', 'row', { style: 'margin-top:12px;gap:8px' }, el('input', { type: 'checkbox', checked: F.multipla, onchange: (e) => { F.multipla = e.target.checked; } }), 'Permitir mais de uma resposta'));
+    } else {
+      corpo.replaceChildren(nomeCampo,
+        h('h2', 'sec-t', { style: 'margin:18px 0 8px' }, 'Ação no grupo'),
+        h('div', 'field', el('label', { class: 'lbl', for: 'f-acao' }, 'O que fazer'),
+          el('select', { class: 'sel', id: 'f-acao', onchange: (e) => { F.acao = e.target.value; refresh(); } },
+            el('option', { value: 'liberar', selected: F.acao === 'liberar' }, 'Abrir o grupo (todos podem escrever)'),
+            el('option', { value: 'travar', selected: F.acao === 'travar' }, 'Trancar o grupo (só admins escrevem)'))),
+        h('div', 'hint', 'Funciona apenas em grupos em que o número conectado é administrador.'));
+    }
+  };
+
+  /* --- agendamento --- */
+  const agBox = h('div', '');
+  const pintarAg = () => {
+    const horas = h('div', 'times');
+    F.horarios.forEach((hr, i) => {
+      horas.append(h('span', 'row', { style: 'gap:4px' },
+        el('input', { class: 'inp', type: 'time', value: hr, 'aria-label': 'Horário ' + (i + 1), style: 'width:140px', oninput: (e) => { F.horarios[i] = e.target.value; refresh(); } }),
+        F.horarios.length > 1 ? el('button', { class: 'ibtn', type: 'button', 'aria-label': 'Remover horário', onclick: () => { F.horarios.splice(i, 1); pintarAg(); refresh(); } }, ico('x', 16)) : null));
+    });
+    const dias = F.repetir === 'custom' ? h('div', 'days', TODOS.map((d) =>
+      el('button', { type: 'button', 'aria-pressed': String(F.diasCustom.includes(d)), onclick: () => {
+        F.diasCustom = F.diasCustom.includes(d) ? F.diasCustom.filter((x) => x !== d) : [...F.diasCustom, d]; pintarAg(); refresh(); } }, DIA_LABEL[d]))) : null;
+    const unica = F.repetir === 'nao';
+    const textoRep = unica ? 'A mensagem será enviada uma única vez.'
+      : F.fimTipo === 'data' && F.fim ? `O envio se repete (${textoDias({ dias: sempreDias() }).toLowerCase()}) até ${brData(F.fim)}.`
+      : `O envio se repete (${textoDias({ dias: sempreDias() }).toLowerCase()}) até o cancelamento.`;
+    agBox.replaceChildren(
+      h('div', 'two',
+        h('div', 'field', el('label', { class: 'lbl', for: 'f-inicio' }, 'Data de início'),
+          el('input', { class: 'inp', id: 'f-inicio', type: 'date', value: F.inicio, onchange: (e) => { F.inicio = e.target.value; refresh(); } })),
+        h('div', 'field', el('label', { class: 'lbl' }, F.horarios.length > 1 ? 'Horários' : 'Horário'), horas,
+          el('button', { class: 'linkbtn', type: 'button', style: 'margin-top:6px', onclick: () => { F.horarios.push('12:00'); pintarAg(); refresh(); } }, ico('plus', 16), 'Adicionar outro horário'))),
+      h('div', 'hint', { style: 'margin-top:-6px' }, 'Horário de Brasília (UTC−3)'),
+      h('div', 'field', el('label', { class: 'lbl', for: 'f-repetir' }, 'Repetir'),
+        el('select', { class: 'sel', id: 'f-repetir', onchange: (e) => { F.repetir = e.target.value; pintarAg(); refresh(); } },
+          [['nao', 'Não repetir (uma única vez)'], ['diario', 'Todos os dias'], ['uteis', 'Dias úteis (segunda a sexta)'], ['fim', 'Fins de semana'], ['custom', 'Escolher dias da semana…']]
+            .map(([k, t]) => el('option', { value: k, selected: F.repetir === k }, t))), dias),
+      h('div', 'field', el('label', { class: 'lbl' }, 'Encerrar repetição'),
+        h('div', 'radios',
+          el('label', {}, el('input', { type: 'radio', name: 'fim', checked: F.fimTipo === 'nunca', disabled: unica, onchange: () => { F.fimTipo = 'nunca'; pintarAg(); refresh(); } }), 'Até eu cancelar'),
+          el('label', {}, el('input', { type: 'radio', name: 'fim', checked: F.fimTipo === 'data', disabled: unica, onchange: () => { F.fimTipo = 'data'; pintarAg(); refresh(); } }), 'Em uma data'),
+          el('input', { class: 'inp', type: 'date', value: F.fim, disabled: unica || F.fimTipo !== 'data', 'aria-label': 'Data final', style: 'width:180px', onchange: (e) => { F.fim = e.target.value; pintarAg(); refresh(); } })),
+        h('div', 'hint', textoRep)));
+  };
+  const sempreDias = () => (F.repetir === 'diario' ? TODOS : F.repetir === 'uteis' ? UTEIS : F.repetir === 'fim' ? FIMSEM : F.diasCustom);
+
+  /* --- prévia e resumo --- */
+  const prevHead = h('div', 'wa-head'); const prevBody = h('div', 'wa');
+  async function pintarPreview() {
+    const g = S.grupos.find((x) => x.apelido === F.dest[0]);
+    prevHead.replaceChildren(h('span', 'avatar sm', ico(g && ehContato(g) ? 'user' : 'users', 18)),
+      h('div', '', h('div', '', { style: 'font-weight:600' }, g ? g.nome_whatsapp : 'Destinatário'), h('div', 'muted small', g && ehContato(g) ? 'Contato' : 'Grupo')));
+    const hora = (F.horarios.find((x) => HHMM.test(x)) || '09:00');
+    const b = h('div', 'bubble');
+    if (F.tipo === 'mensagem') {
+      if (F.imagem) { const im = el('img', { alt: '' }); D().urlImagem(F.imagem).then((u) => { if (u) im.src = u; }); b.append(im); }
+      const t = (F.textos.find((x) => x.trim()) || '').trim();
+      b.append(h('div', 'msg', t || 'Sua mensagem aparece aqui.'));
+    } else if (F.tipo === 'enquete') {
+      b.append(h('div', 'msg', { style: 'font-weight:600' }, F.pergunta.trim() || 'Pergunta da enquete'));
+      const ops = F.opcoes.split('\n').map((s) => s.trim()).filter(Boolean);
+      (ops.length ? ops : ['Opção 1', 'Opção 2']).slice(0, 12).forEach((o) => b.append(h('div', 'poll-o', h('i'), o)));
+    } else {
+      b.append(h('div', 'msg', F.acao === 'travar' ? '🔒 O grupo será trancado: só administradores poderão escrever.' : '🔓 O grupo será aberto: todos poderão escrever.'));
+    }
+    b.append(h('div', 'hora', hora));
+    prevBody.replaceChildren(b);
+  }
+  const resBox = h('dl', '');
+  function pintarResumo() {
+    const m = { horarios: F.horarios.filter((x) => HHMM.test(x)).map((x) => { const r = HHMM.exec(x); return `${two(+r[1])}:${r[2]}`; }),
+      dias: F.repetir === 'nao' ? TODOS : [...sempreDias(), ...(F.inicio ? ['inicio:' + F.inicio] : []), ...(F.fimTipo === 'data' && F.fim ? ['termino:' + F.fim] : [])],
+      data: F.repetir === 'nao' ? F.inicio : null };
+    const prox = F.inicio ? proxima(m) : null;
+    resBox.replaceChildren(
+      h('dt', '', 'Início'), h('dd', '', F.inicio ? brData(F.inicio) : '—'),
+      h('dt', '', 'Frequência'), h('dd', '', m.horarios.length ? frequencia(m) : '—'),
+      h('dt', '', 'Término'), h('dd', '', F.repetir === 'nao' ? 'Após o envio' : F.fimTipo === 'data' && F.fim ? brData(F.fim) : 'Até você cancelar'),
+      h('dt', '', 'Próximo envio'), h('dd', '', prox ? fmtProx(prox) : '—'));
+  }
+
+  /* --- salvar --- */
+  const botoes = {};
+  const salvar = async (ativo) => {
+    erro.hidden = true;
+    try {
+      const row = formParaRegistro(F, ativo);
+      Object.values(botoes).forEach((b) => { b.disabled = true; });
+      await D().salvarMensagem(row, F.id);
+      await recarregar();
+      aviso(ativo ? 'Mensagem agendada!' : 'Rascunho salvo.');
+      ir('agendamentos');
+    } catch (e) { erro.textContent = e.message; erro.hidden = false; erro.scrollIntoView({ block: 'nearest' }); }
+    finally { Object.values(botoes).forEach((b) => { b.disabled = false; }); }
+  };
+  botoes.cancelar = el('button', { class: 'btn', type: 'button', onclick: () => ir('agendamentos') }, 'Cancelar');
+  botoes.rascunho = el('button', { class: 'btn', type: 'button', onclick: () => salvar(false) }, 'Salvar rascunho');
+  botoes.agendar = el('button', { class: 'btn primary', type: 'button', onclick: () => salvar(true) }, ico('clock', 18), base && base.ativo ? 'Salvar alterações' : 'Agendar mensagem');
+
+  pintarTabs(); pintarDest(); pintarTipos(); pintarCorpo(); pintarAg();
+  const testeDest = base ? (base.grupos || []).map((a) => S.grupos.find((g) => g.apelido === a)).find((g) => g && g.teste) : null;
+  const testeBtn = testeDest ? el('button', { class: 'btn sm', type: 'button', style: 'margin-top:14px;width:100%', onclick: () => testarAgora(base, testeDest.apelido) },
+    ico('send', 16), 'Enviar teste agora (versão salva)') : null;
+  const no = h('div', '',
+    el('a', { class: 'back', href: '#/agendamentos' }, ico('left', 18), 'Voltar'),
+    cabecalho(base ? 'Editar mensagem' : 'Nova mensagem', 'Escreva sua mensagem e escolha quando enviar.'),
+    h('div', 'grid2',
+      h('form', 'card pad', { novalidate: true, onsubmit: (e) => e.preventDefault() },
+        h('section', 'sec', h('h2', 'sec-t', 'Destinatário'), tabs, h('div', '', { style: 'margin-top:12px' }, destBox)),
+        h('section', 'sec', tipos, h('div', '', { style: 'margin-top:16px' }, corpo)),
+        h('section', 'sec', h('h2', 'sec-t', 'Agendamento'), agBox),
+        erro,
+        h('div', 'form-ft',
+          botoes.cancelar, base ? el('button', { class: 'btn danger', type: 'button', onclick: () => excluirMensagem(base) }, ico('trash', 16), 'Excluir') : null,
+          h('span', 'grow'), botoes.rascunho, botoes.agendar)),
+      h('aside', 'side',
+        h('div', 'card pad', h('h3', '', 'Prévia da mensagem'), h('p', 'muted small', 'Veja como sua mensagem vai aparecer.'), prevHead, prevBody),
+        h('div', 'card pad resumo', h('div', 'row', { style: 'gap:10px' }, ico('repeat', 22), h('h3', '', 'Resumo do agendamento')), resBox, testeBtn))));
+  refresh();
+  return no;
 }
 
-/* ---- Imagens ---- */
-async function dialogoImagens() {
-  const area = el('div', { class: 'imgs' });
-  const info = el('div', { class: 'muted small' });
-  const pintar = async () => {
-    area.replaceChildren();
-    for (const i of S.imgs) {
-      const img = el('img', { alt: i.name, loading: 'lazy' });
-      sb.storage.from(BUCKET).createSignedUrl(i.name, 3600).then(({ data }) => { if (data) img.src = data.signedUrl; });
-      area.append(el('figure', {}, img, el('figcaption', {}, i.name, ' ',
-        el('button', { class: 'danger small', text: 'excluir', onclick: async () => {
-          if (!confirm('Excluir ' + i.name + '?')) return;
-          await sb.storage.from(BUCKET).remove([i.name]); await carregarTudo(); pintar();
-        } }))));
+/* ---- seletor de imagens (anexo) e biblioteca ---- */
+function dialogoImagens(aoEscolher) {
+  const grade = h('div', 'imgs'); const info = h('div', 'muted small', { style: 'margin-top:8px' });
+  const pintar = () => {
+    grade.replaceChildren();
+    if (!S.imgs.length) grade.append(h('p', 'muted', 'Nenhuma imagem enviada ainda.'));
+    for (const nome of S.imgs) {
+      const img = el('img', { alt: nome, loading: 'lazy' });
+      D().urlImagem(nome).then((u) => { if (u) img.src = u; });
+      const fig = h('figure', '',
+        el('button', { class: 'pick', type: 'button', onclick: () => { if (aoEscolher) { aoEscolher(nome); fecharDialogo(); } }, 'aria-label': 'Usar ' + nome }, img, h('figcaption', '', nome)),
+        el('button', { class: 'ibtn danger del', type: 'button', 'aria-label': 'Excluir imagem', onclick: async () => {
+          if (!window.confirm('Excluir a imagem ' + nome + '?')) return;
+          await D().excluirImagem(nome); await recarregar(); pintar();
+        } }, ico('trash', 16)));
+      grade.append(fig);
     }
     info.textContent = `${S.imgs.length} imagem(ns)`;
   };
-  const input = el('input', { type: 'file', accept: 'image/png,image/jpeg,image/webp', multiple: true, id: 'up' });
-  input.addEventListener('change', async () => {
-    const files = [...input.files]; let ok = 0;
-    for (const file of files) {
-      info.textContent = `Enviando ${ok + 1} de ${files.length}…`;
-      const nome = file.name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9._ -]/g, '_');
-      const r = await sb.storage.from(BUCKET).upload(nome, file, { upsert: true, contentType: file.type });
-      if (r.error) { info.textContent = 'Erro em ' + nome + ': ' + r.error.message; return; }
-      ok++;
+  const entrada = el('input', { type: 'file', accept: 'image/png,image/jpeg,image/webp', multiple: true, hidden: true });
+  entrada.addEventListener('change', async () => {
+    const arquivos = [...entrada.files]; let ok = 0;
+    for (const f of arquivos) {
+      info.textContent = `Enviando ${ok + 1} de ${arquivos.length}…`;
+      try { await D().enviarImagem(f); ok++; } catch (e) { info.textContent = `Erro em ${f.name}: ${e.message}`; return; }
     }
-    await carregarTudo(); await pintar(); renderConteudo();
+    await recarregar(); pintar();
   });
-  dlg.replaceChildren(el('div', {},
-    el('div', { class: 'hd', text: 'Imagens' }),
-    el('div', { class: 'bd' },
-      el('label', { class: 'f', for: 'up', text: 'Enviar imagens (pode escolher várias de uma vez)' }), input, info, el('div', { style: 'height:10px' }), area),
-    el('div', { class: 'ft' }, el('button', { class: 'primary', text: 'Fechar', onclick: () => dlg.close() }))));
-  dlg.showModal(); pintar();
+  abrirDialogo(aoEscolher ? 'Escolher anexo' : 'Imagens', [
+    h('p', 'muted small', aoEscolher ? 'Toque em uma imagem para anexar, ou envie novas.' : 'Imagens disponíveis para anexar às mensagens.'),
+    h('div', '', { style: 'margin-top:10px' }, entrada, el('button', { class: 'btn sm', type: 'button', onclick: () => entrada.click() }, ico('plus', 16), 'Enviar imagens')),
+    info, grade],
+  [el('button', { class: 'btn', type: 'button', onclick: fecharDialogo }, 'Fechar')], { largura: 'min(720px, calc(100vw - 24px))' });
+  pintar();
 }
 
-/* ---- exportar para o formato do enviador atual ---- */
-function exportarConfig() {
-  const aliases = Object.fromEntries(S.grupos.map((g) => [g.apelido, g.nome_whatsapp]));
-  const mensagens = S.msgs.map((m) => {
-    const o = { nome: m.nome, grupos: m.grupos, horarios: m.horarios, dias: m.dias };
-    if (m.data) { o.data = m.data; delete o.dias; }
-    if (!m.ativo) o.ativo = false;
-    if (m.tipo === 'acao') o.acao = m.acao;
-    else if (m.tipo === 'enquete') o.enquete = m.enquete;
-    else { if (m.imagem) o.imagem = m.imagem; o.textos = m.textos; if (m.ordem !== 'aleatoria') o.ordem = m.ordem; }
-    return o;
-  });
-  const blob = new Blob([JSON.stringify({ fusoHorario: 'America/Sao_Paulo', toleranciaMinutos: 10, grupos: aliases, mensagens }, null, 2)], { type: 'application/json' });
-  const a = el('a', { href: URL.createObjectURL(blob), download: 'config.json' });
+/* ================= Contatos e grupos ================= */
+function paginaContatos() {
+  const abas = h('div', 'tabs', [['grupos', 'Grupos'], ['contatos', 'Contatos']].map(([id, nome]) =>
+    el('button', { type: 'button', role: 'tab', 'aria-selected': String(S.abaCont === id), onclick: () => { S.abaCont = id; renderPagina(true); } }, nome)));
+  const grupos = S.grupos.filter((g) => !ehContato(g));
+  const contatos = S.grupos.filter(ehContato);
+  const usos = (ap) => S.msgs.filter((m) => (m.grupos || []).includes(ap)).length;
+  const linha = (g) => h('div', 'item',
+    h('span', 'avatar', ico(ehContato(g) ? 'user' : 'users', 22)),
+    h('div', 'tx', h('div', 'titulo trunc', { style: 'font-weight:600' }, g.nome_whatsapp),
+      h('div', 'muted small trunc', ehContato(g) ? fmtNumero(g.jid.split('@')[0]) : `Apelido: ${g.apelido}`),
+      h('div', 'row', { style: 'margin-top:4px;gap:6px' },
+        ehContato(g) ? null : (g.teste ? h('span', 'chip warn', 'Teste') : h('span', 'chip ok', 'Produção')),
+        ehContato(g) ? null : (g.jid ? h('span', 'chip', 'Encontrado no WhatsApp') : h('span', 'chip warn', 'Ainda não verificado')),
+        h('span', 'chip', `${usos(g.apelido)} agendamento(s)`))),
+    el('button', { class: 'ibtn', type: 'button', 'aria-label': 'Editar', onclick: () => (ehContato(g) ? dialogoContato(null, g) : dialogoGrupo(g)) }, ico('edit', 18)),
+    el('button', { class: 'ibtn danger', type: 'button', 'aria-label': 'Remover', onclick: async () => {
+      const n = usos(g.apelido);
+      if (!(await confirmar({ titulo: 'Remover?', texto: n ? `${n} agendamento(s) usam "${g.nome_whatsapp}". Eles ficarão sem destinatário válido.` : `"${g.nome_whatsapp}" será removido da lista.`, ok: 'Remover', perigo: true }))) return;
+      try { await D().excluirGrupo(g.id); await recarregar(); renderPagina(true); } catch (e) { aviso(e.message, 'bad'); }
+    } }, ico('trash', 18)));
+  let conteudo;
+  if (S.abaCont === 'grupos') {
+    const novos = (S.listaWhats || []).filter((w) => !grupos.some((g) => g.nome_whatsapp.trim().toLowerCase() === String(w.nome).trim().toLowerCase()));
+    conteudo = h('div', '',
+      h('div', 'row', { style: 'margin-bottom:14px' },
+        el('button', { class: 'btn', type: 'button', id: 'btn-sync', onclick: buscarGruposWhats }, ico('repeat', 18), 'Buscar grupos no WhatsApp'),
+        el('button', { class: 'btn', type: 'button', onclick: () => dialogoGrupo(null) }, ico('plus', 18), 'Adicionar grupo manualmente')),
+      grupos.length ? h('div', 'card', grupos.map(linha)) : vazio('users', 'Nenhum grupo cadastrado', 'Busque os grupos do seu WhatsApp ou adicione manualmente.'),
+      S.listaWhats ? h('div', 'card', { style: 'margin-top:18px' }, h('div', 'card-h', h('h2', '', 'Grupos encontrados no WhatsApp')),
+        novos.length ? novos.map((w) => h('div', 'item', h('span', 'avatar sm', ico('users', 18)),
+          h('div', 'tx', h('div', 'trunc', { style: 'font-weight:600' }, w.nome), h('div', 'row', { style: 'gap:6px;margin-top:2px' },
+            w.admin ? h('span', 'chip ok', 'Você é admin') : h('span', 'chip warn', 'Você não é admin'), w.trancado ? h('span', 'chip', 'Trancado') : null)),
+          el('button', { class: 'btn sm', type: 'button', onclick: async () => {
+            const apelidos = new Set(S.grupos.map((g) => g.apelido)); let ap = slug(w.nome), n = 2; while (apelidos.has(ap)) ap = slug(w.nome) + '-' + n++;
+            try { await D().salvarGrupo({ apelido: ap, nome_whatsapp: w.nome, teste: false }, null); await recarregar(); renderPagina(true); aviso('Grupo adicionado.'); } catch (e) { aviso(e.message, 'bad'); }
+          } }, 'Adicionar')))
+          : h('div', 'item muted', 'Todos os grupos encontrados já estão cadastrados.')) : null);
+  } else {
+    conteudo = h('div', '',
+      h('div', 'notice', { style: 'margin-bottom:14px' }, 'Mensagens automáticas para pessoas que não esperam receber podem levar ao bloqueio do número. Use apenas com contatos que aceitam receber.'),
+      h('div', 'row', { style: 'margin-bottom:14px' }, el('button', { class: 'btn primary', type: 'button', onclick: () => dialogoContato() }, ico('plus', 18), 'Adicionar contato')),
+      contatos.length ? h('div', 'card', contatos.map(linha)) : vazio('user', 'Nenhum contato cadastrado', 'Adicione um contato com o número do WhatsApp para enviar mensagens individuais.'));
+  }
+  return h('div', '', cabecalho('Contatos e grupos', 'Quem pode receber suas mensagens.'), abas, conteudo);
+}
+async function buscarGruposWhats() {
+  const b = document.getElementById('btn-sync');
+  if (b) { b.disabled = true; b.lastChild.textContent = 'Buscando… (até 40 s)'; }
+  try { const r = await chamarFuncao({ acao: 'sincronizar_grupos' }); S.listaWhats = r.grupos || []; await recarregar(); }
+  catch (e) { aviso('Não consegui buscar os grupos: ' + e.message, 'bad'); }
+  renderPagina(true);
+}
+function dialogoGrupo(g) {
+  const nome = el('input', { class: 'inp', id: 'gp-nome', type: 'text', value: g ? g.nome_whatsapp : '', placeholder: 'Nome exato do grupo no WhatsApp' });
+  const apelido = el('input', { class: 'inp', id: 'gp-ap', type: 'text', value: g ? g.apelido : '', placeholder: 'Ex.: vendas', disabled: !!g });
+  const teste = el('input', { type: 'checkbox', id: 'gp-teste', checked: g ? g.teste : false });
+  const msg = h('div', 'notice bad'); msg.hidden = true;
+  const salvar = async () => {
+    const n = nome.value.trim(); const a = (g ? g.apelido : slug(apelido.value || n));
+    if (!n) { msg.textContent = 'Informe o nome do grupo.'; msg.hidden = false; return; }
+    try {
+      const row = { nome_whatsapp: n, teste: teste.checked };
+      if (g) { if (n !== g.nome_whatsapp) row.jid = null; } else { row.apelido = a; }
+      await D().salvarGrupo(row, g ? g.id : null);
+      await recarregar(); fecharDialogo(); renderPagina(true); aviso('Grupo salvo.');
+    } catch (e) { msg.textContent = e.message; msg.hidden = false; }
+  };
+  abrirDialogo(g ? 'Editar grupo' : 'Adicionar grupo', [
+    h('div', 'field', el('label', { class: 'lbl', for: 'gp-nome' }, 'Nome no WhatsApp'), nome, h('div', 'hint', 'Precisa ser idêntico ao nome do grupo no WhatsApp.')),
+    h('div', 'field', el('label', { class: 'lbl', for: 'gp-ap' }, 'Apelido'), apelido, g ? h('div', 'hint', 'O apelido não pode ser alterado.') : null),
+    h('label', 'row', { style: 'margin-top:14px;gap:8px' }, teste, 'É um grupo de teste (libera "Enviar agora")'),
+    h('div', '', { style: 'margin-top:12px' }, msg)],
+  [el('button', { class: 'btn', type: 'button', onclick: fecharDialogo }, 'Cancelar'), el('button', { class: 'btn primary', type: 'button', onclick: salvar }, 'Salvar')]);
+}
+function dialogoContato(aoCriar, existente) {
+  const nome = el('input', { class: 'inp', id: 'ct-nome', type: 'text', value: existente ? existente.nome_whatsapp : '', placeholder: 'Ex.: Ana Souza' });
+  const num = el('input', { class: 'inp', id: 'ct-num', type: 'tel', inputmode: 'numeric', value: existente ? existente.jid.split('@')[0] : '', placeholder: '5511999999999', disabled: !!existente });
+  const msg = h('div', 'notice bad'); msg.hidden = true;
+  const salvar = async () => {
+    const n = nome.value.trim(); const d = num.value.replace(/\D/g, '');
+    if (!n) { msg.textContent = 'Informe o nome do contato.'; msg.hidden = false; return; }
+    if (!existente && (d.length < 10 || d.length > 15)) { msg.textContent = 'Informe o número com código do país e DDD (ex.: 5511999999999).'; msg.hidden = false; return; }
+    try {
+      if (existente) await D().salvarGrupo({ nome_whatsapp: n }, existente.id);
+      else await D().salvarGrupo({ apelido: 'contato-' + d, nome_whatsapp: n, jid: d + '@s.whatsapp.net', teste: false }, null);
+      await recarregar(); fecharDialogo();
+      if (aoCriar) aoCriar('contato-' + d); else renderPagina(true);
+      aviso('Contato salvo.');
+    } catch (e) { msg.textContent = e.message; msg.hidden = false; }
+  };
+  abrirDialogo(existente ? 'Editar contato' : 'Adicionar contato', [
+    h('div', 'field', el('label', { class: 'lbl', for: 'ct-nome' }, 'Nome'), nome),
+    h('div', 'field', el('label', { class: 'lbl', for: 'ct-num' }, 'Número do WhatsApp'), num, h('div', 'hint', 'Com código do país e DDD, só números. Ex.: 5511999999999.')),
+    h('div', '', { style: 'margin-top:12px' }, msg)],
+  [el('button', { class: 'btn', type: 'button', onclick: fecharDialogo }, 'Cancelar'), el('button', { class: 'btn primary', type: 'button', onclick: salvar }, 'Salvar')]);
+}
+
+/* ================= Modelos ================= */
+function paginaModelos() {
+  const lista = S.modelos;
+  const salvarLista = async (nova) => {
+    try { await D().salvarModelos(nova); S.modelos = nova; renderPagina(true); } catch (e) { aviso('Não consegui salvar: ' + e.message, 'bad'); }
+  };
+  const linha = (t) => h('div', 'item',
+    h('span', 'avatar', ico('file', 22)),
+    h('div', 'tx', h('div', 'trunc', { style: 'font-weight:600' }, t.nome), h('div', 'muted small', { style: 'overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical' }, t.texto),
+      t.imagem ? h('span', 'chip', { style: 'margin-top:4px' }, ico('image', 14), t.imagem) : null),
+    el('button', { class: 'btn sm', type: 'button', onclick: () => ir('agendamentos/nova?modelo=' + t.id) }, 'Usar'),
+    el('button', { class: 'ibtn', type: 'button', 'aria-label': 'Editar', onclick: () => dialogoModelo(t, salvarLista) }, ico('edit', 18)),
+    el('button', { class: 'ibtn danger', type: 'button', 'aria-label': 'Excluir', onclick: async () => {
+      if (await confirmar({ titulo: 'Excluir modelo?', texto: `"${t.nome}" será removido.`, ok: 'Excluir', perigo: true })) salvarLista(lista.filter((x) => x.id !== t.id));
+    } }, ico('trash', 18)));
+  return h('div', '',
+    cabecalho('Modelos', 'Textos prontos para reaproveitar nas suas mensagens.', el('button', { class: 'btn primary', onclick: () => dialogoModelo(null, salvarLista) }, ico('plus', 18), 'Novo modelo')),
+    lista.length ? h('div', 'card', lista.map(linha)) : vazio('file', 'Nenhum modelo ainda', 'Salve textos que você usa com frequência e aplique com um clique ao criar uma mensagem.',
+      el('button', { class: 'btn primary', onclick: () => dialogoModelo(null, salvarLista) }, ico('plus', 18), 'Criar modelo')));
+}
+function dialogoModelo(t, salvarLista) {
+  const nome = el('input', { class: 'inp', id: 'md-nome', type: 'text', value: t ? t.nome : '', placeholder: 'Ex.: Bom dia — vendas', maxlength: '60' });
+  const texto = el('textarea', { class: 'txt', id: 'md-texto', rows: '5', placeholder: 'Texto do modelo' }); texto.value = t ? t.texto : '';
+  const img = el('select', { class: 'sel', id: 'md-img' }, el('option', { value: '' }, 'Sem imagem'), S.imgs.map((i) => el('option', { value: i, selected: t && t.imagem === i }, i)));
+  const msg = h('div', 'notice bad'); msg.hidden = true;
+  const salvar = () => {
+    const n = nome.value.trim(); const x = texto.value.trim();
+    if (!n || !x) { msg.textContent = 'Informe o nome e o texto do modelo.'; msg.hidden = false; return; }
+    if (S.modelos.some((m) => m.nome === n && (!t || m.id !== t.id))) { msg.textContent = 'Já existe um modelo com esse nome.'; msg.hidden = false; return; }
+    const novo = { id: t ? t.id : 'm' + Date.now().toString(36), nome: n, texto: x, imagem: img.value || null };
+    fecharDialogo(); salvarLista(t ? S.modelos.map((m) => (m.id === t.id ? novo : m)) : [...S.modelos, novo]);
+  };
+  abrirDialogo(t ? 'Editar modelo' : 'Novo modelo', [
+    h('div', 'field', el('label', { class: 'lbl', for: 'md-nome' }, 'Nome'), nome),
+    h('div', 'field', el('label', { class: 'lbl', for: 'md-texto' }, 'Texto'), texto),
+    h('div', 'field', el('label', { class: 'lbl', for: 'md-img' }, 'Imagem (opcional)'), img),
+    h('div', '', { style: 'margin-top:12px' }, msg)],
+  [el('button', { class: 'btn', type: 'button', onclick: fecharDialogo }, 'Cancelar'), el('button', { class: 'btn primary', type: 'button', onclick: salvar }, 'Salvar')]);
+}
+
+/* ================= Configurações ================= */
+function desenharQr(texto) {
+  const box = h('div', 'qr');
+  try { const qr = window.qrcode(0, 'M'); qr.addData(texto); qr.make(); box.innerHTML = qr.createSvgTag(6, 4); }
+  catch (_) { box.textContent = 'Não consegui desenhar o QR code.'; }
+  return box;
+}
+function paginaConfig() {
+  const c = S.conexao || { status: 'desconectado' };
+  const sf = S.statusFuncao || {};
+  const vinculado = c.status === 'conectado' || sf.sessao_guardada === true;
+  const aguardando = c.status === 'aguardando_codigo' && c.codigo_vinculacao;
+  const tom = c.status === 'conectado' ? 'ok' : c.status === 'erro' ? 'bad' : 'warn';
+  const rotulo = { desconectado: 'Desconectado', aguardando_codigo: 'Aguardando leitura do QR code', conectando: 'Conectando', conectado: 'Conectado', erro: 'Com erro' }[c.status] || c.status;
+  const executar = async (texto, corpo, depois) => {
+    S.msgConexao = texto + '…'; renderPagina(true);
+    try { const r = await chamarFuncao(corpo); S.msgConexao = ''; if (depois) depois(r); }
+    catch (e) { S.msgConexao = 'Erro: ' + e.message; }
+    try { Object.assign(S, await D().leve()); } catch (_) { /* ignora */ }
+    await carregarStatusFuncao(true); renderPagina(true);
+  };
+  const agendaLigada = sf.agenda_ativa === true;
+  return h('div', '',
+    cabecalho('Configurações', 'Conexão com o WhatsApp, agenda automática e conta.'),
+    h('div', 'card pad', { style: 'margin-bottom:18px' },
+      h('h2', 'sec-t', 'WhatsApp'),
+      h('div', 'row', h('span', 'chip ' + tom, h('span', 'dot'), rotulo), c.numero ? h('strong', '', fmtNumero(c.numero)) : null,
+        c.status === 'conectado' ? h('span', 'muted small', 'Última verificação: ' + ha(c.enviador_visto_em)) : null),
+      c.detalhe ? h('p', 'muted small', { style: 'margin-top:6px' }, c.detalhe) : null,
+      sf.erro ? h('p', 'small', { style: 'color:var(--bad);margin-top:6px' }, 'Não consegui consultar o servidor: ' + sf.erro) : null,
+      aguardando ? h('div', '', { style: 'margin-top:16px' },
+        h('p', 'small', 'No WhatsApp do número: Aparelhos conectados → Conectar um aparelho → aponte a câmera para o QR code.'),
+        h('div', '', { style: 'margin-top:10px' }, desenharQr(c.codigo_vinculacao)),
+        h('p', 'muted small', { style: 'margin-top:8px' }, 'O desenho muda sozinho a cada poucos segundos; a janela dura cerca de 2 minutos.')) : null,
+      h('div', 'row', { style: 'margin-top:16px' },
+        el('button', { class: 'btn primary', type: 'button', disabled: vinculado || !!S.msgConexao, onclick: () => executar('Gerando o QR code', { acao: 'vincular' }) }, ico('phone', 18), 'Gerar QR code'),
+        el('button', { class: 'btn danger', type: 'button', disabled: !vinculado || !!S.msgConexao, onclick: async () => {
+          if (await confirmar({ titulo: 'Desconectar o WhatsApp?', texto: 'As mensagens deixarão de ser enviadas até você conectar de novo.', ok: 'Desconectar', perigo: true })) executar('Desconectando', { acao: 'desconectar' });
+        } }, ico('logout', 18), 'Desconectar')),
+      S.msgConexao ? h('p', 'muted small', { style: 'margin-top:10px' }, S.msgConexao) : null,
+      h('p', 'muted small', { style: 'margin-top:14px' }, 'Conecte uma única vez e evite repetir a vinculação sem necessidade: muitas vinculações seguidas aumentam o risco de restrição do número.')),
+    h('div', 'card pad', { style: 'margin-bottom:18px' },
+      h('h2', 'sec-t', 'Agenda automática'),
+      h('div', 'setrow', h('div', '', h('div', '', { style: 'font-weight:600' }, 'Enviar mensagens nos horários marcados'),
+        h('div', 'muted small', agendaLigada ? 'Ligada: as mensagens ativas são enviadas sozinhas.' : 'Desligada: nada é enviado sozinho. O botão "Enviar agora" dos grupos de teste continua funcionando.')),
+        el('button', { class: 'switch', type: 'button', role: 'switch', 'aria-checked': String(agendaLigada), 'aria-label': 'Agenda automática', disabled: !vinculado || S.statusFuncao === null,
+          onclick: () => alternarAgenda(!agendaLigada) }))),
+    h('div', 'card pad', { style: 'margin-bottom:18px' },
+      h('h2', 'sec-t', 'Conta e dados'),
+      h('div', 'setrow', h('div', '', h('div', '', { style: 'font-weight:600' }, nomeUsuario(S.user) || 'Minha conta'), h('div', 'muted small', S.user.email)),
+        el('button', { class: 'btn', type: 'button', onclick: dialogoSenha }, ico('key', 18), 'Alterar senha')),
+      h('div', 'setrow', h('div', '', h('div', '', { style: 'font-weight:600' }, 'Imagens'), h('div', 'muted small', `${S.imgs.length} imagem(ns) na biblioteca`)),
+        el('button', { class: 'btn', type: 'button', onclick: () => dialogoImagens(null) }, ico('image', 18), 'Gerenciar imagens')),
+      h('div', 'setrow', h('div', '', h('div', '', { style: 'font-weight:600' }, 'Cópia de segurança'), h('div', 'muted small', 'Baixa um arquivo com seus agendamentos, grupos e modelos.')),
+        el('button', { class: 'btn', type: 'button', onclick: exportarDados }, ico('download', 18), 'Exportar')),
+      h('div', 'setrow', h('div', '', h('div', '', { style: 'font-weight:600' }, 'Fuso horário'), h('div', 'muted small', 'Horário de Brasília (UTC−3). Todos os horários do painel usam esse fuso.')))),
+    h('p', 'muted small', 'OnTime · painel 2.0'));
+}
+function exportarDados() {
+  const dados = { exportado_em: new Date().toISOString(), fuso: 'America/Sao_Paulo', grupos: S.grupos.map(({ id, ...r }) => r), mensagens: S.msgs.map(({ id, ...r }) => r), modelos: S.modelos };
+  const a = el('a', { href: URL.createObjectURL(new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' })), download: 'ontime-backup.json' });
   document.body.append(a); a.click(); a.remove();
 }
 
-/* ---- Grupos ---- */
-function telaGrupos() {
-  const nome = el('input', { type: 'text', placeholder: 'Nome exato no WhatsApp' });
-  const apelido = el('input', { type: 'text', placeholder: 'Apelido (ex.: vendas)' });
-  const teste = el('input', { type: 'checkbox' });
-  const erro = el('div', { class: 'notice bad', hidden: true });
-  return el('div', {},
-    el('p', { class: 'muted', text: 'O apelido é o que aparece nas mensagens. O nome precisa ser idêntico ao do grupo no WhatsApp. Grupos de teste liberam o botão "Enviar agora".' }),
-    el('div', { class: 'list' }, S.grupos.map((g) => el('div', { class: 'card item' },
-      el('div', {}, el('h3', { text: g.apelido }), el('div', { class: 'small', text: g.nome_whatsapp }),
-        el('div', { class: 'badges' }, g.teste ? el('span', { class: 'badge warn', text: 'teste' }) : el('span', { class: 'badge ok', text: 'produção' }),
-          g.jid ? el('span', { class: 'badge', text: 'encontrado no WhatsApp' }) : el('span', { class: 'badge warn', text: 'ainda não verificado' }))),
-      el('div', { class: 'actions' },
-        el('button', { class: 'danger', text: 'Remover', onclick: async () => {
-          const usado = S.msgs.filter((m) => (m.grupos || []).includes(g.apelido)).length;
-          if (!confirm(usado ? `${usado} mensagem(ns) usam este grupo. Remover mesmo assim?` : 'Remover este grupo?')) return;
-          await sb.from('wpp_grupos').delete().eq('id', g.id); await carregarTudo(); renderConteudo();
-        } }))))),
-    el('h2', { text: 'Adicionar grupo' }),
-    el('div', { class: 'card' }, apelido, el('div', { style: 'height:8px' }), nome,
-      el('label', { class: 'checks', style: 'margin-top:8px' }, teste, ' É um grupo de teste'), erro,
-      el('div', { style: 'margin-top:10px' }, el('button', { class: 'primary', text: 'Adicionar', onclick: async () => {
-        erro.hidden = true;
-        const a = apelido.value.trim().toLowerCase().replace(/\s+/g, '-');
-        if (!a || !nome.value.trim()) { erro.textContent = 'Preencha o apelido e o nome.'; erro.hidden = false; return; }
-        const r = await sb.from('wpp_grupos').insert({ apelido: a, nome_whatsapp: nome.value.trim(), teste: teste.checked });
-        if (r.error) { erro.textContent = r.error.message.includes('duplicate') ? 'Esse apelido já existe.' : r.error.message; erro.hidden = false; return; }
-        await carregarTudo(); renderConteudo();
-      } }))));
-}
-
-/* ---- Histórico ---- */
-function telaHistorico() {
-  if (!S.envios.length) return el('p', { class: 'muted', text: 'Nenhum envio registrado ainda. O enviador grava aqui cada mensagem, enquete e ação.' });
-  return el('div', { class: 'scroll' }, el('table', {},
-    el('thead', {}, el('tr', {}, ['Quando', 'Mensagem', 'Grupo', 'Resultado'].map((t) => el('th', { text: t })))),
-    el('tbody', {}, S.envios.map((e) => el('tr', {},
-      el('td', { class: 'next', text: fmtFull(e.enviado_em) }), el('td', { text: e.mensagem }), el('td', { text: e.grupo || '—' }),
-      el('td', {}, el('span', { class: 'badge ' + (e.ok ? 'ok' : 'bad'), text: e.ok ? 'enviado' : 'erro' }), e.detalhe ? el('div', { class: 'muted small', text: e.detalhe }) : null))))));
-}
-
-/* ---- Conexão ---- */
-async function chamarFuncao(corpo) {
-  const { data, error } = await sb.functions.invoke('ontime-enviar', { body: corpo });
-  if (error) {
-    let msg = error.message || 'erro';
-    try { const j = await error.context.json(); if (j && j.erro) msg = j.erro; } catch (_) { /* mantém a mensagem */ }
-    throw new Error(msg);
-  }
-  if (data && data.erro) throw new Error(data.erro);
-  return data;
-}
-function desenharQr(texto) {
-  const box = el('div', { class: 'qrbox' });
-  try {
-    const qr = window.qrcode(0, 'M');
-    qr.addData(texto); qr.make();
-    box.innerHTML = qr.createSvgTag(6, 4);
-  } catch (e) { box.textContent = 'Não consegui desenhar o QR code.'; }
-  return box;
-}
-async function carregarStatusFuncao() {
-  try { S.statusFuncao = await chamarFuncao({ acao: 'status' }); } catch (e) { S.statusFuncao = { erro: e.message }; }
-  if (S.tab === 'conexao') renderConteudo();
-}
-function telaConexao() {
-  const c = S.conexao || { status: 'desconectado' };
-  if (S.statusFuncao === undefined) { S.statusFuncao = null; carregarStatusFuncao(); }
-  const sf = S.statusFuncao || {};
-  const msg = el('div', { class: 'small muted', text: S.msgConexao || '' });
-  const cor = c.status === 'conectado' ? 'ok' : c.status === 'erro' ? 'bad' : 'warn';
-  const rotulo = { desconectado: 'desconectado', aguardando_codigo: 'aguardando o QR code ser lido', conectando: 'conectando', conectado: 'conectado', erro: 'erro' }[c.status] || c.status;
-  const executar = async (texto, corpo, depois) => {
-    S.msgConexao = texto + '…'; renderConteudo();
-    try { const r = await chamarFuncao(corpo); S.msgConexao = ''; if (depois) depois(r); }
-    catch (e) { S.msgConexao = 'Erro: ' + e.message; }
-    const { data } = await sb.from('wpp_conexao').select('*').eq('id', 1).maybeSingle();
-    S.conexao = data; S.statusFuncao = undefined; renderConteudo();
-  };
-  const aguardando = c.status === 'aguardando_codigo' && c.codigo_vinculacao;
-  const vinculado = c.status === 'conectado' || sf.sessao_guardada;
-  return el('div', {},
-    el('div', { class: 'card' },
-      el('div', { class: 'row' }, el('strong', { text: 'WhatsApp' }), el('span', { class: 'badge ' + cor, text: rotulo }),
-        sf.sessao_guardada ? el('span', { class: 'badge ok', text: 'sessão guardada' }) : null,
-        sf.agenda_ativa === true ? el('span', { class: 'badge ok', text: 'agenda automática LIGADA' }) : el('span', { class: 'badge warn', text: 'agenda automática desligada' })),
-      c.numero ? el('div', { class: 'small', text: 'Número: ' + c.numero }) : null,
-      c.detalhe ? el('div', { class: 'small muted', text: c.detalhe }) : null,
-      sf.erro ? el('div', { class: 'small', style: 'color:var(--bad)', text: 'Não consegui consultar o servidor: ' + sf.erro }) : null),
-    aguardando ? el('div', { class: 'card', style: 'margin-top:12px' },
-      el('div', { class: 'small', text: 'No WhatsApp do número: Aparelhos conectados → Conectar um aparelho → aponte a câmera para o QR code abaixo.' }),
-      desenharQr(c.codigo_vinculacao),
-      el('div', { class: 'muted small', style: 'margin-top:6px', text: 'O desenho muda sozinho a cada poucos segundos. A janela dura cerca de 2 minutos.' })) : null,
-    el('h2', { text: 'Conectar' }),
-    el('div', { class: 'card' },
-      el('div', { class: 'row' },
-        el('button', { class: 'primary', text: 'Gerar QR code', disabled: !!vinculado, onclick: () => executar('Gerando o QR code', { acao: 'vincular' }) }),
-        el('button', { text: 'Atualizar grupos', disabled: !vinculado, onclick: () => executar('Buscando os grupos', { acao: 'sincronizar_grupos' }, (r) => {
-          S.msgConexao = 'Grupos: ' + (r.grupos || []).map((g) => g.nome + (g.admin ? ' (admin)' : '')).join(' · ');
-        }) }),
-        el('button', { class: 'danger', text: 'Desconectar', disabled: !vinculado, onclick: () => { if (confirm('Desconectar o WhatsApp deste painel?')) executar('Desconectando', { acao: 'desconectar' }); } })),
-      msg),
-    el('h2', { text: 'Agenda automática' }),
-    el('div', { class: 'card' },
-      el('p', { class: 'small muted', style: 'margin-top:0', text: 'Enquanto estiver desligada, nada é enviado sozinho. Os envios de teste continuam possíveis pelo botão "Enviar agora" de cada mensagem.' }),
-      el('div', { class: 'row' },
-        el('button', { class: 'primary', text: 'Ligar agenda automática', disabled: !vinculado || sf.agenda_ativa === true, onclick: () => {
-          if (confirm('Ligar a agenda automática? As mensagens ativas passarão a ser enviadas nos horários, para os grupos cadastrados.')) executar('Ligando a agenda', { acao: 'agenda', ativa: true });
-        } }),
-        el('button', { text: 'Desligar', disabled: sf.agenda_ativa !== true, onclick: () => executar('Desligando a agenda', { acao: 'agenda', ativa: false }) }))),
-    el('p', { class: 'muted small', text: 'Dica: conecte uma única vez e evite repetir a vinculação sem necessidade. Muitas vinculações seguidas aumentam o risco de restrição do número.' }));
-}
 init();
 </script>
 </body>
