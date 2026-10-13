@@ -94,6 +94,8 @@
   .imgs figure { margin: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--bg); }
   .imgs img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: var(--line); }
   .imgs figcaption { font-size: 12px; padding: 6px 8px; overflow-wrap: anywhere; }
+  .qrbox { background: #fff; padding: 10px; border-radius: 10px; display: inline-block; max-width: 100%; margin-top: 8px; }
+  .qrbox svg { width: min(300px, 100%); height: auto; display: block; }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -102,6 +104,7 @@
 <dialog id="dlg"></dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script>
 'use strict';
 /* ================= configuração (chaves públicas; a proteção é feita por RLS no banco) ================= */
@@ -405,8 +408,9 @@ function dialogoMensagem(m) {
     testar.append(el('label', { class: 'f', text: 'Testar agora em um grupo de teste' }),
       el('div', { class: 'row' }, el('div', { class: 'grow' }, sel),
         el('button', { type: 'button', text: 'Enviar agora', disabled: !S.grupos.some((g) => g.teste), onclick: async () => {
-          const r = await sb.from('wpp_comandos').insert({ tipo: 'enviar_agora', payload: { mensagem_id: v.id, grupo: sel.value } });
-          st.textContent = r.error ? r.error.message : (enviadorOnline() ? 'Pedido enviado ao enviador.' : 'Pedido registrado. O enviador está offline e fará quando voltar.');
+          st.textContent = 'Enviando…';
+          try { const r = await chamarFuncao({ acao: 'enviar_agora', mensagem_id: v.id, grupo: sel.value }); st.textContent = 'Enviado (' + r.detalhe + ') em ' + Math.round(r.total_ms / 100) / 10 + ' s.'; }
+          catch (e) { st.textContent = 'Erro: ' + e.message; }
         } })), st);
   }
   dlg.replaceChildren(el('form', { method: 'dialog', onsubmit: salvar },
@@ -557,42 +561,76 @@ function telaHistorico() {
 }
 
 /* ---- Conexão ---- */
+async function chamarFuncao(corpo) {
+  const { data, error } = await sb.functions.invoke('ontime-enviar', { body: corpo });
+  if (error) {
+    let msg = error.message || 'erro';
+    try { const j = await error.context.json(); if (j && j.erro) msg = j.erro; } catch (_) { /* mantém a mensagem */ }
+    throw new Error(msg);
+  }
+  if (data && data.erro) throw new Error(data.erro);
+  return data;
+}
+function desenharQr(texto) {
+  const box = el('div', { class: 'qrbox' });
+  try {
+    const qr = window.qrcode(0, 'M');
+    qr.addData(texto); qr.make();
+    box.innerHTML = qr.createSvgTag(6, 4);
+  } catch (e) { box.textContent = 'Não consegui desenhar o QR code.'; }
+  return box;
+}
+async function carregarStatusFuncao() {
+  try { S.statusFuncao = await chamarFuncao({ acao: 'status' }); } catch (e) { S.statusFuncao = { erro: e.message }; }
+  if (S.tab === 'conexao') renderConteudo();
+}
 function telaConexao() {
   const c = S.conexao || { status: 'desconectado' };
-  const online = enviadorOnline();
-  const tel = el('input', { type: 'tel', placeholder: '55DDDNUMERO (só números)', id: 'tel', inputmode: 'numeric' });
-  const st = el('div', { class: 'muted small' });
-  const enviar = async (tipo, payload) => {
-    const r = await sb.from('wpp_comandos').insert({ tipo, payload });
-    st.textContent = r.error ? r.error.message : 'Pedido enviado. Aguarde alguns segundos.';
-  };
+  if (S.statusFuncao === undefined) { S.statusFuncao = null; carregarStatusFuncao(); }
+  const sf = S.statusFuncao || {};
+  const msg = el('div', { class: 'small muted', text: S.msgConexao || '' });
   const cor = c.status === 'conectado' ? 'ok' : c.status === 'erro' ? 'bad' : 'warn';
+  const rotulo = { desconectado: 'desconectado', aguardando_codigo: 'aguardando o QR code ser lido', conectando: 'conectando', conectado: 'conectado', erro: 'erro' }[c.status] || c.status;
+  const executar = async (texto, corpo, depois) => {
+    S.msgConexao = texto + '…'; renderConteudo();
+    try { const r = await chamarFuncao(corpo); S.msgConexao = ''; if (depois) depois(r); }
+    catch (e) { S.msgConexao = 'Erro: ' + e.message; }
+    const { data } = await sb.from('wpp_conexao').select('*').eq('id', 1).maybeSingle();
+    S.conexao = data; S.statusFuncao = undefined; renderConteudo();
+  };
+  const aguardando = c.status === 'aguardando_codigo' && c.codigo_vinculacao;
+  const vinculado = c.status === 'conectado' || sf.sessao_guardada;
   return el('div', {},
     el('div', { class: 'card' },
-      el('div', { class: 'row' }, el('strong', { text: 'Status' }), el('span', { class: 'badge ' + cor, text: c.status.replace('_', ' ') }),
-        el('span', { class: 'badge ' + (online ? 'ok' : 'warn'), text: online ? 'enviador online' : 'enviador offline' })),
+      el('div', { class: 'row' }, el('strong', { text: 'WhatsApp' }), el('span', { class: 'badge ' + cor, text: rotulo }),
+        sf.sessao_guardada ? el('span', { class: 'badge ok', text: 'sessão guardada' }) : null,
+        sf.agenda_ativa === true ? el('span', { class: 'badge ok', text: 'agenda automática LIGADA' }) : el('span', { class: 'badge warn', text: 'agenda automática desligada' })),
       c.numero ? el('div', { class: 'small', text: 'Número: ' + c.numero }) : null,
       c.detalhe ? el('div', { class: 'small muted', text: c.detalhe }) : null,
-      c.enviador_visto_em ? el('div', { class: 'small muted', text: 'Enviador visto em ' + fmtFull(c.enviador_visto_em) }) : null),
-    !online ? el('div', { class: 'notice', text: 'O enviador (programa que mantém o WhatsApp conectado) ainda não está ligado a este painel. Os pedidos ficam registrados e serão atendidos quando ele estiver online.' }) : null,
-    c.codigo_vinculacao ? el('div', { class: 'card', style: 'margin-top:12px' },
-      el('div', { class: 'muted small', text: 'Digite este código no WhatsApp: Aparelhos conectados → Conectar um aparelho → Conectar com número de telefone' }),
-      el('div', { style: 'margin-top:8px' }, el('span', { class: 'code', text: c.codigo_vinculacao }))) : null,
-    el('h2', { text: 'Conectar um número' }),
+      sf.erro ? el('div', { class: 'small', style: 'color:var(--bad)', text: 'Não consegui consultar o servidor: ' + sf.erro }) : null),
+    aguardando ? el('div', { class: 'card', style: 'margin-top:12px' },
+      el('div', { class: 'small', text: 'No WhatsApp do número: Aparelhos conectados → Conectar um aparelho → aponte a câmera para o QR code abaixo.' }),
+      desenharQr(c.codigo_vinculacao),
+      el('div', { class: 'muted small', style: 'margin-top:6px', text: 'O desenho muda sozinho a cada poucos segundos. A janela dura cerca de 2 minutos.' })) : null,
+    el('h2', { text: 'Conectar' }),
     el('div', { class: 'card' },
-      el('label', { class: 'f', for: 'tel', text: 'Número do WhatsApp a conectar' }), tel,
-      el('div', { class: 'row', style: 'margin-top:10px' },
-        el('button', { class: 'primary', text: 'Gerar código de vinculação', onclick: () => {
-          const n = tel.value.replace(/\D/g, '');
-          if (n.length < 12) { st.textContent = 'Digite o número com 55 e DDD.'; return; }
-          enviar('vincular', { telefone: n });
+      el('div', { class: 'row' },
+        el('button', { class: 'primary', text: 'Gerar QR code', disabled: !!vinculado, onclick: () => executar('Gerando o QR code', { acao: 'vincular' }) }),
+        el('button', { text: 'Atualizar grupos', disabled: !vinculado, onclick: () => executar('Buscando os grupos', { acao: 'sincronizar_grupos' }, (r) => {
+          S.msgConexao = 'Grupos: ' + (r.grupos || []).map((g) => g.nome + (g.admin ? ' (admin)' : '')).join(' · ');
+        }) }),
+        el('button', { class: 'danger', text: 'Desconectar', disabled: !vinculado, onclick: () => { if (confirm('Desconectar o WhatsApp deste painel?')) executar('Desconectando', { acao: 'desconectar' }); } })),
+      msg),
+    el('h2', { text: 'Agenda automática' }),
+    el('div', { class: 'card' },
+      el('p', { class: 'small muted', style: 'margin-top:0', text: 'Enquanto estiver desligada, nada é enviado sozinho. Os envios de teste continuam possíveis pelo botão "Enviar agora" de cada mensagem.' }),
+      el('div', { class: 'row' },
+        el('button', { class: 'primary', text: 'Ligar agenda automática', disabled: !vinculado || sf.agenda_ativa === true, onclick: () => {
+          if (confirm('Ligar a agenda automática? As mensagens ativas passarão a ser enviadas nos horários, para os grupos cadastrados.')) executar('Ligando a agenda', { acao: 'agenda', ativa: true });
         } }),
-        el('button', { class: 'danger', text: 'Desconectar', onclick: () => { if (confirm('Desconectar o WhatsApp?')) enviar('desconectar', {}); } }),
-        el('button', { text: 'Atualizar lista de grupos', onclick: () => enviar('sincronizar_grupos', {}) })),
-      st),
+        el('button', { text: 'Desligar', disabled: sf.agenda_ativa !== true, onclick: () => executar('Desligando a agenda', { acao: 'agenda', ativa: false }) }))),
     el('p', { class: 'muted small', text: 'Dica: conecte uma única vez e evite repetir a vinculação sem necessidade. Muitas vinculações seguidas aumentam o risco de restrição do número.' }));
 }
-
 init();
 </script>
 </body>
