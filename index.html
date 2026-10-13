@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda WhatsApp</title>
+<style>
+  /* Layout: barra superior fixa, abas, lista de cartões e diálogos para edição. */
+  :root {
+    --bg: #f6f5fa; --panel: #ffffff; --ink: #1d1a2b; --muted: #6b6780; --line: #e3e0ee;
+    --accent: #5a2dbd; --accent-ink: #ffffff; --accent-soft: #eee8fb;
+    --ok: #17803d; --ok-soft: #e1f4e8; --warn: #9a5b00; --warn-soft: #fdf0d6;
+    --bad: #b3261e; --bad-soft: #fbe5e3;
+    --radius: 10px; --shadow: 0 1px 2px rgba(29,26,43,.06), 0 4px 14px rgba(29,26,43,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14121c; --panel: #1d1a2b; --ink: #ece9f7; --muted: #a29db8; --line: #322e45;
+      --accent: #a78bfa; --accent-ink: #14121c; --accent-soft: #2a2347;
+      --ok: #6ee7a0; --ok-soft: #12301f; --warn: #fbbf5c; --warn-soft: #34270d;
+      --bad: #ff8a80; --bad-soft: #3a1714; --shadow: none; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14121c; --panel: #1d1a2b; --ink: #ece9f7; --muted: #a29db8; --line: #322e45;
+    --accent: #a78bfa; --accent-ink: #14121c; --accent-soft: #2a2347;
+    --ok: #6ee7a0; --ok-soft: #12301f; --warn: #fbbf5c; --warn-soft: #34270d;
+    --bad: #ff8a80; --bad-soft: #3a1714; --shadow: none; color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body > header, main { padding-inline: 16px; }
+  header.top { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--line);
+               display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding-block: 10px; }
+  header.top h1 { font-size: 17px; margin: 0; letter-spacing: .01em; }
+  header.top .spacer { flex: 1; }
+  nav.tabs { display: flex; gap: 4px; overflow-x: auto; padding-block: 10px; }
+  nav.tabs button { border: 0; background: transparent; color: var(--muted); padding: 8px 14px; border-radius: 8px;
+                    font: inherit; cursor: pointer; white-space: nowrap; }
+  nav.tabs button[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  main { max-width: 980px; margin: 0 auto; padding-block: 8px 48px; }
+  h2 { font-size: 16px; margin: 20px 0 10px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .grow { flex: 1; min-width: 0; }
+  .muted { color: var(--muted); }
+  .small { font-size: 13px; }
+  button, .btn { font: inherit; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+                 padding: 7px 12px; border-radius: 8px; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  button.danger { color: var(--bad); }
+  button:disabled { opacity: .55; cursor: default; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  input[type=text], input[type=email], input[type=password], input[type=date], input[type=tel], select, textarea {
+    width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line);
+    border-radius: 8px; padding: 8px 10px; }
+  textarea { min-height: 120px; resize: vertical; }
+  label.f { display: block; margin-block: 12px 4px; font-weight: 600; font-size: 13px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+          padding: 12px 14px; box-shadow: var(--shadow); }
+  .list { display: grid; gap: 10px; }
+  .item { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: start; }
+  .item h3 { font-size: 15px; margin: 0 0 4px; }
+  .item.off { opacity: .6; }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .badge { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+  .badge.ok { background: var(--ok-soft); color: var(--ok); }
+  .badge.warn { background: var(--warn-soft); color: var(--warn); }
+  .badge.bad { background: var(--bad-soft); color: var(--bad); }
+  .actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+  .next { font-variant-numeric: tabular-nums; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .scroll { overflow-x: auto; }
+  dialog { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--ink);
+           width: min(680px, calc(100vw - 24px)); padding: 0; max-height: calc(100dvh - 24px); }
+  dialog::backdrop { background: rgba(10,8,20,.55); }
+  dialog form { display: flex; flex-direction: column; max-height: inherit; }
+  dialog .hd { padding: 14px 18px; border-bottom: 1px solid var(--line); font-weight: 600; }
+  dialog .bd { padding: 6px 18px 14px; overflow-y: auto; }
+  dialog .ft { padding: 12px 18px; border-top: 1px solid var(--line); display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .checks { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  .checks label { display: inline-flex; align-items: center; gap: 6px; font-weight: 400; }
+  .notice { padding: 10px 12px; border-radius: 8px; margin-block: 10px; background: var(--warn-soft); color: var(--warn); }
+  .notice.bad { background: var(--bad-soft); color: var(--bad); }
+  .notice.ok { background: var(--ok-soft); color: var(--ok); }
+  .code { font: 700 32px/1 ui-monospace, Menlo, Consolas, monospace; letter-spacing: .18em; padding: 14px 18px;
+          background: var(--accent-soft); color: var(--accent); border-radius: 10px; display: inline-block; }
+  .login { max-width: 380px; margin: 12vh auto 0; padding: 20px; }
+  .imgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+  .imgs figure { margin: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--bg); }
+  .imgs img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: var(--line); }
+  .imgs figcaption { font-size: 12px; padding: 6px 8px; overflow-wrap: anywhere; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<dialog id="dlg"></dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+'use strict';
+/* ================= configuração (chaves públicas; a proteção é feita por RLS no banco) ================= */
+const SUPABASE_URL = 'https://eclvpqhbhnimqaswdyvy.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVjbHZwcWhiaG5pbXFhc3dkeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4NDE2MTgsImV4cCI6MjEwMTQxNzYxOH0.sRlo2xWnENB64HMGhP7ULuKPdMKLMFNwePa3knBh6uk';
+const BUCKET = 'wpp-imagens';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ================= utilitários ================= */
+const DIAS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
+const DIA_LABEL = { dom: 'Dom', seg: 'Seg', ter: 'Ter', qua: 'Qua', qui: 'Qui', sex: 'Sex', sab: 'Sáb' };
+const TODOS = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
+const el = (tag, props = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (v === null || v === undefined || v === false) continue;
+    if (k === 'class') n.className = v;
+    else if (k === 'text') n.textContent = v;
+    else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+    else if (k === 'value') n.value = v;
+    else if (k === 'checked' || k === 'disabled' || k === 'hidden' || k === 'selected') n[k] = !!v;
+    else n.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat()) if (c !== null && c !== undefined && c !== false) n.append(c.nodeType ? c : document.createTextNode(String(c)));
+  return n;
+};
+const two = (n) => String(n).padStart(2, '0');
+const fmt = (d) => d ? `${DIA_LABEL[DIAS[d.getDay()]]} ${two(d.getDate())}/${two(d.getMonth() + 1)} ${two(d.getHours())}:${two(d.getMinutes())}` : '—';
+const fmtFull = (iso) => { const d = new Date(iso); return `${two(d.getDate())}/${two(d.getMonth() + 1)} ${two(d.getHours())}:${two(d.getMinutes())}:${two(d.getSeconds())}`; };
+const HHMM = /^([01]?\d|2[0-3]):([0-5]\d)$/;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function proxima(m, de = new Date()) {
+  const hs = (m.horarios || []).map((t) => HHMM.exec(t)).filter(Boolean).map((x) => [+x[1], +x[2]]).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  if (!hs.length) return null;
+  const limite = m.data ? 800 : 8;
+  for (let i = 0; i <= limite; i++) {
+    const dia = new Date(de.getFullYear(), de.getMonth(), de.getDate() + i);
+    if (m.data) {
+      const [y, mo, d] = m.data.split('-').map(Number);
+      if (dia.getFullYear() !== y || dia.getMonth() + 1 !== mo || dia.getDate() !== d) continue;
+    } else if (!(m.dias || []).includes(DIAS[dia.getDay()])) continue;
+    for (const [h, mi] of hs) {
+      const c = new Date(dia.getFullYear(), dia.getMonth(), dia.getDate(), h, mi);
+      if (c > de) return c;
+    }
+  }
+  return null;
+}
+function resumoDias(m) {
+  if (m.data) return `só em ${m.data.split('-').reverse().join('/')}`;
+  const d = m.dias || [];
+  if (d.length === 7) return 'todos os dias';
+  if (d.length === 5 && ['seg', 'ter', 'qua', 'qui', 'sex'].every((x) => d.includes(x))) return 'dias úteis';
+  if (d.length === 2 && d.includes('sab') && d.includes('dom')) return 'fim de semana';
+  return TODOS.filter((x) => d.includes(x)).map((x) => DIA_LABEL[x]).join(', ') || 'nenhum dia';
+}
+
+/* ================= estado ================= */
+const S = { user: null, admin: false, tab: 'agenda', msgs: [], grupos: [], imgs: [], conexao: null, envios: [], filtro: 'todos', busca: '' };
+const app = document.getElementById('app');
+const dlg = document.getElementById('dlg');
+let pollTimer = null;
+
+/* ================= acesso ================= */
+async function init() {
+  const { data } = await sb.auth.getSession();
+  S.user = data.session ? data.session.user : null;
+  sb.auth.onAuthStateChange((_e, session) => {
+    const novo = session ? session.user : null;
+    if ((novo && novo.id) !== (S.user && S.user.id)) { S.user = novo; boot(); }
+  });
+  boot();
+}
+async function boot() {
+  clearInterval(pollTimer);
+  if (!S.user) return renderLogin();
+  const { data, error } = await sb.from('wpp_admins').select('user_id').eq('user_id', S.user.id).maybeSingle();
+  S.admin = !error && !!data;
+  if (!S.admin) return renderSemAcesso();
+  await carregarTudo();
+  render();
+  pollTimer = setInterval(atualizarLeve, 4000);
+}
+function renderLogin(msg, ok) {
+  const email = el('input', { type: 'email', id: 'lg-email', autocomplete: 'username', placeholder: 'seu@email.com' });
+  const senha = el('input', { type: 'password', id: 'lg-senha', autocomplete: 'current-password', placeholder: 'senha (mín. 8 caracteres)' });
+  const aviso = el('div', { class: 'notice' + (ok ? ' ok' : ' bad'), hidden: !msg, text: msg || '' });
+  const entrar = async () => {
+    aviso.hidden = true;
+    const { error } = await sb.auth.signInWithPassword({ email: email.value.trim(), password: senha.value });
+    if (error) { aviso.className = 'notice bad'; aviso.textContent = error.message; aviso.hidden = false; }
+  };
+  senha.addEventListener('keydown', (e) => { if (e.key === 'Enter') entrar(); });
+  app.replaceChildren(el('div', { class: 'login card' },
+    el('h1', { text: 'Agenda WhatsApp' }),
+    el('p', { class: 'muted', text: 'Acesso restrito. Entre com o mesmo e-mail e senha do LiveControl.' }),
+    el('label', { class: 'f', for: 'lg-email', text: 'E-mail' }), email,
+    el('label', { class: 'f', for: 'lg-senha', text: 'Senha' }), senha,
+    aviso,
+    el('div', { class: 'row', style: 'margin-top:14px' },
+      el('button', { class: 'primary', text: 'Entrar', onclick: entrar }))));
+}
+function renderSemAcesso() {
+  app.replaceChildren(el('div', { class: 'login card' },
+    el('h1', { text: 'Sem permissão' }),
+    el('p', { text: 'Você entrou como ' + S.user.email + ', mas este usuário não tem acesso ao painel da agenda.' }),
+    el('div', { class: 'row' },
+      el('button', { text: 'Verificar de novo', onclick: boot }),
+      el('button', { text: 'Sair', onclick: () => sb.auth.signOut() }))));
+}
+
+/* ================= dados ================= */
+async function carregarTudo() {
+  const [m, g, c, e, i] = await Promise.all([
+    sb.from('wpp_mensagens').select('*').order('nome'),
+    sb.from('wpp_grupos').select('*').order('apelido'),
+    sb.from('wpp_conexao').select('*').eq('id', 1).maybeSingle(),
+    sb.from('wpp_envios').select('*').order('enviado_em', { ascending: false }).limit(150),
+    sb.storage.from(BUCKET).list('', { limit: 300, sortBy: { column: 'name', order: 'asc' } }),
+  ]);
+  S.msgs = m.data || []; S.grupos = g.data || []; S.conexao = c.data; S.envios = e.data || [];
+  S.imgs = (i.data || []).filter((f) => f.name && !f.name.startsWith('.'));
+}
+async function atualizarLeve() {
+  if (dlg.open) return;
+  if (S.tab === 'conexao') {
+    const { data } = await sb.from('wpp_conexao').select('*').eq('id', 1).maybeSingle();
+    S.conexao = data; if (S.tab === 'conexao') renderConteudo();
+  } else if (S.tab === 'historico') {
+    const { data } = await sb.from('wpp_envios').select('*').order('enviado_em', { ascending: false }).limit(150);
+    S.envios = data || []; renderConteudo();
+  }
+}
+const enviadorOnline = () => S.conexao && S.conexao.enviador_visto_em && (Date.now() - new Date(S.conexao.enviador_visto_em).getTime() < 120000);
+
+/* ================= telas ================= */
+function render() {
+  const online = enviadorOnline();
+  const st = S.conexao ? S.conexao.status : 'desconectado';
+  const badge = el('span', { class: 'badge ' + (st === 'conectado' && online ? 'ok' : st === 'erro' ? 'bad' : 'warn'),
+    text: st === 'conectado' ? (online ? 'WhatsApp conectado' : 'Enviador offline') : 'WhatsApp ' + st.replace('_', ' ') });
+  const abas = [['agenda', 'Agenda'], ['grupos', 'Grupos'], ['historico', 'Histórico'], ['conexao', 'Conexão']];
+  app.replaceChildren(
+    el('header', { class: 'top' },
+      el('h1', { text: 'Agenda WhatsApp' }), badge, el('span', { class: 'spacer' }),
+      el('span', { class: 'muted small', text: S.user.email }),
+      el('button', { text: 'Sair', onclick: () => sb.auth.signOut() })),
+    el('main', {},
+      el('nav', { class: 'tabs', role: 'tablist' }, abas.map(([id, nome]) =>
+        el('button', { role: 'tab', 'aria-selected': String(S.tab === id), text: nome, onclick: () => { S.tab = id; render(); } }))),
+      el('div', { id: 'conteudo' })));
+  renderConteudo();
+}
+function renderConteudo() {
+  const c = document.getElementById('conteudo');
+  if (!c) return;
+  const fn = { agenda: telaAgenda, grupos: telaGrupos, historico: telaHistorico, conexao: telaConexao }[S.tab];
+  c.replaceChildren(fn());
+}
+
+/* ---- Agenda ---- */
+function telaAgenda() {
+  const agora = new Date();
+  const lista = S.msgs
+    .filter((m) => S.filtro === 'todos' || (S.filtro === 'ativos' ? m.ativo : !m.ativo))
+    .filter((m) => !S.busca || m.nome.toLowerCase().includes(S.busca.toLowerCase()))
+    .map((m) => ({ m, prox: m.ativo ? proxima(m, agora) : null }))
+    .sort((a, b) => (a.prox ? a.prox.getTime() : Infinity) - (b.prox ? b.prox.getTime() : Infinity) || a.m.nome.localeCompare(b.m.nome));
+  const proximos = lista.filter((x) => x.prox).slice(0, 6);
+  const busca = el('input', { type: 'text', placeholder: 'Buscar por nome', value: S.busca, 'aria-label': 'Buscar' });
+  busca.addEventListener('input', () => { S.busca = busca.value; const pos = busca.selectionStart; renderConteudo(); const n = document.querySelector('#conteudo input[type=text]'); if (n) { n.focus(); n.setSelectionRange(pos, pos); } });
+  const filtro = el('select', { 'aria-label': 'Filtro', onchange: (e) => { S.filtro = e.target.value; renderConteudo(); } },
+    ['todos', 'ativos', 'pausados'].map((v) => el('option', { value: v, selected: S.filtro === v, text: v[0].toUpperCase() + v.slice(1) })));
+  return el('div', {},
+    el('div', { class: 'row', style: 'margin-block:8px' },
+      el('div', { class: 'grow' }, busca),
+      el('div', { style: 'width:140px' }, filtro),
+      el('button', { text: 'Imagens (' + S.imgs.length + ')', onclick: dialogoImagens }),
+      el('button', { text: 'Exportar config.json', onclick: exportarConfig }),
+      el('button', { class: 'primary', text: 'Nova mensagem', onclick: () => dialogoMensagem(null) })),
+    proximos.length ? el('div', { class: 'card', style: 'margin-bottom:12px' },
+      el('div', { class: 'muted small', text: 'Próximos envios' }),
+      proximos.map((x) => el('div', { class: 'next' }, el('strong', { text: fmt(x.prox) }), '  ', x.m.nome))) : null,
+    el('div', { class: 'muted small', text: `${lista.length} item(ns)` }),
+    el('div', { class: 'list' }, lista.map(({ m, prox }) => cartaoMensagem(m, prox))));
+}
+function cartaoMensagem(m, prox) {
+  const tipo = { mensagem: 'Mensagem', enquete: 'Enquete', acao: m.acao === 'travar' ? 'Trancar grupo' : 'Abrir grupo' }[m.tipo];
+  return el('div', { class: 'card item' + (m.ativo ? '' : ' off') },
+    el('div', {},
+      el('h3', { text: m.nome }),
+      el('div', { class: 'small' }, el('strong', { class: 'next', text: (m.horarios || []).join(' · ') }), ' — ', resumoDias(m)),
+      el('div', { class: 'badges' },
+        el('span', { class: 'badge', text: tipo }),
+        (m.grupos || []).map((g) => el('span', { class: 'badge', text: g })),
+        m.imagem ? el('span', { class: 'badge', text: '🖼 ' + m.imagem }) : null,
+        m.ativo ? (prox ? el('span', { class: 'badge ok next', text: 'próximo: ' + fmt(prox) }) : el('span', { class: 'badge warn', text: 'sem próxima data' }))
+                : el('span', { class: 'badge warn', text: 'pausada' }))),
+    el('div', { class: 'actions' },
+      el('button', { text: m.ativo ? 'Pausar' : 'Ativar', onclick: async () => { await sb.from('wpp_mensagens').update({ ativo: !m.ativo }).eq('id', m.id); await carregarTudo(); renderConteudo(); } }),
+      el('button', { text: 'Editar', onclick: () => dialogoMensagem(m) }),
+      el('button', { text: 'Duplicar', onclick: () => dialogoMensagem({ ...m, id: null, nome: m.nome + ' (cópia)' }) })));
+}
+
+/* ---- Diálogo de mensagem ---- */
+function dialogoMensagem(m) {
+  const novo = !m || !m.id;
+  const v = m || { nome: '', tipo: 'mensagem', ativo: true, grupos: [], horarios: [], dias: TODOS.slice(), data: null, textos: [], ordem: 'aleatoria', imagem: null, enquete: null, acao: null };
+  const f = {};
+  const secao = (id, ...kids) => el('div', { id, 'data-sec': id }, kids);
+  f.nome = el('input', { type: 'text', value: v.nome, id: 'm-nome' });
+  f.tipo = el('select', { id: 'm-tipo' }, [['mensagem', 'Mensagem (texto e/ou imagem)'], ['enquete', 'Enquete'], ['acao', 'Abrir ou trancar o grupo']].map(([k, t]) => el('option', { value: k, selected: v.tipo === k, text: t })));
+  f.ativo = el('input', { type: 'checkbox', id: 'm-ativo', checked: v.ativo });
+  f.grupos = S.grupos.map((g) => ({ g, cb: el('input', { type: 'checkbox', checked: (v.grupos || []).includes(g.apelido) }) }));
+  f.horarios = el('input', { type: 'text', value: (v.horarios || []).join(', '), placeholder: '09:00, 15:30', id: 'm-horarios' });
+  f.dias = TODOS.map((d) => ({ d, cb: el('input', { type: 'checkbox', checked: (v.dias || []).includes(d) }) }));
+  f.data = el('input', { type: 'date', value: v.data || '', id: 'm-data' });
+  f.textos = el('textarea', { id: 'm-textos', placeholder: 'Escreva o texto. Para ter variações, separe com uma linha contendo apenas ---' }, '');
+  f.textos.value = (v.textos || []).join('\n---\n');
+  f.ordem = el('select', { id: 'm-ordem' }, [['aleatoria', 'Sortear uma variação'], ['sequencial', 'Alternar na ordem']].map(([k, t]) => el('option', { value: k, selected: v.ordem === k, text: t })));
+  f.imagem = el('select', { id: 'm-imagem' }, el('option', { value: '', text: 'Sem imagem' }),
+    S.imgs.map((i) => el('option', { value: i.name, selected: v.imagem === i.name, text: i.name })));
+  if (v.imagem && !S.imgs.some((i) => i.name === v.imagem)) f.imagem.append(el('option', { value: v.imagem, selected: true, text: v.imagem + ' (não enviada)' }));
+  const e = v.enquete || { pergunta: '', opcoes: [], multipla: false };
+  f.pergunta = el('input', { type: 'text', value: e.pergunta, id: 'm-perg' });
+  f.opcoes = el('textarea', { id: 'm-opc', placeholder: 'Uma opção por linha (de 2 a 12)' }, ''); f.opcoes.value = (e.opcoes || []).join('\n');
+  f.multipla = el('input', { type: 'checkbox', checked: e.multipla });
+  f.acao = el('select', { id: 'm-acao' }, [['liberar', 'Abrir (todos podem escrever)'], ['travar', 'Trancar (só admins escrevem)']].map(([k, t]) => el('option', { value: k, selected: v.acao === k, text: t })));
+  const erro = el('div', { class: 'notice bad', hidden: true });
+  const preset = (lista) => () => f.dias.forEach((x) => { x.cb.checked = lista.includes(x.d); });
+
+  const sMsg = secao('s-mensagem',
+    el('label', { class: 'f', for: 'm-textos', text: 'Texto' }), f.textos,
+    el('label', { class: 'f', for: 'm-ordem', text: 'Quando houver variações' }), f.ordem,
+    el('label', { class: 'f', for: 'm-imagem', text: 'Imagem (opcional)' }), f.imagem,
+    el('div', { class: 'muted small', text: 'O texto vira a legenda da imagem. Imagens novas se enviam em "Imagens".' }));
+  const sEnq = secao('s-enquete',
+    el('label', { class: 'f', for: 'm-perg', text: 'Pergunta' }), f.pergunta,
+    el('label', { class: 'f', for: 'm-opc', text: 'Opções' }), f.opcoes,
+    el('label', { class: 'checks' }, f.multipla, ' Permitir mais de uma resposta'));
+  const sAcao = secao('s-acao', el('label', { class: 'f', for: 'm-acao', text: 'Ação' }), f.acao);
+  const mostrar = () => { sMsg.hidden = f.tipo.value !== 'mensagem'; sEnq.hidden = f.tipo.value !== 'enquete'; sAcao.hidden = f.tipo.value !== 'acao'; };
+  f.tipo.addEventListener('change', mostrar); mostrar();
+
+  const coletar = () => {
+    const horarios = f.horarios.value.split(/[,;\s]+/).map((s) => s.trim()).filter(Boolean);
+    const ruim = horarios.find((h) => !HHMM.test(h));
+    if (ruim) throw new Error(`Horário inválido: "${ruim}". Use o formato 09:00.`);
+    if (!f.nome.value.trim()) throw new Error('Dê um nome para a mensagem.');
+    const grupos = f.grupos.filter((x) => x.cb.checked).map((x) => x.g.apelido);
+    if (!grupos.length) throw new Error('Escolha pelo menos um grupo.');
+    if (!horarios.length) throw new Error('Informe pelo menos um horário.');
+    const dias = f.dias.filter((x) => x.cb.checked).map((x) => x.d);
+    if (!f.data.value && !dias.length) throw new Error('Escolha os dias da semana ou uma data.');
+    const tipo = f.tipo.value;
+    const row = {
+      nome: f.nome.value.trim(), tipo, ativo: f.ativo.checked, grupos,
+      horarios: horarios.map((h) => { const x = HHMM.exec(h); return `${two(+x[1])}:${x[2]}`; }),
+      dias: dias.length ? dias : TODOS.slice(), data: f.data.value || null,
+      textos: [], ordem: f.ordem.value, imagem: null, enquete: null, acao: null,
+    };
+    if (tipo === 'mensagem') {
+      row.textos = f.textos.value.split(/\n-{3,}\n/).map((t) => t.trim()).filter(Boolean);
+      if (!row.textos.length) throw new Error('Escreva o texto da mensagem.');
+      if (row.textos.some((t) => t.length > (f.imagem.value ? 1024 : 4000))) throw new Error(f.imagem.value ? 'Com imagem, cada texto pode ter no máximo 1024 caracteres.' : 'Texto muito longo (máximo 4000).');
+      row.imagem = f.imagem.value || null;
+    } else if (tipo === 'enquete') {
+      const opcoes = f.opcoes.value.split('\n').map((s) => s.trim()).filter(Boolean);
+      if (!f.pergunta.value.trim()) throw new Error('Escreva a pergunta da enquete.');
+      if (opcoes.length < 2 || opcoes.length > 12) throw new Error('A enquete precisa de 2 a 12 opções.');
+      row.enquete = { pergunta: f.pergunta.value.trim(), opcoes, multipla: f.multipla.checked };
+    } else row.acao = f.acao.value;
+    return row;
+  };
+  const salvar = async (ev) => {
+    ev.preventDefault(); erro.hidden = true;
+    try {
+      const row = coletar();
+      const r = novo ? await sb.from('wpp_mensagens').insert(row) : await sb.from('wpp_mensagens').update(row).eq('id', v.id);
+      if (r.error) throw new Error(r.error.message.includes('duplicate') ? 'Já existe uma mensagem com esse nome.' : r.error.message);
+      dlg.close(); await carregarTudo(); renderConteudo();
+    } catch (err) { erro.textContent = err.message; erro.hidden = false; }
+  };
+  const apagar = async () => {
+    if (!confirm('Excluir "' + v.nome + '" definitivamente?')) return;
+    const r = await sb.from('wpp_mensagens').delete().eq('id', v.id);
+    if (r.error) { erro.textContent = r.error.message; erro.hidden = false; return; }
+    dlg.close(); await carregarTudo(); renderConteudo();
+  };
+  const testar = el('div', {});
+  if (!novo) {
+    const sel = el('select', {}, S.grupos.filter((g) => g.teste).map((g) => el('option', { value: g.apelido, text: g.apelido + ' — ' + g.nome_whatsapp })));
+    const st = el('span', { class: 'muted small' });
+    testar.append(el('label', { class: 'f', text: 'Testar agora em um grupo de teste' }),
+      el('div', { class: 'row' }, el('div', { class: 'grow' }, sel),
+        el('button', { type: 'button', text: 'Enviar agora', disabled: !S.grupos.some((g) => g.teste), onclick: async () => {
+          const r = await sb.from('wpp_comandos').insert({ tipo: 'enviar_agora', payload: { mensagem_id: v.id, grupo: sel.value } });
+          st.textContent = r.error ? r.error.message : (enviadorOnline() ? 'Pedido enviado ao enviador.' : 'Pedido registrado. O enviador está offline e fará quando voltar.');
+        } })), st);
+  }
+  dlg.replaceChildren(el('form', { method: 'dialog', onsubmit: salvar },
+    el('div', { class: 'hd', text: novo ? 'Nova mensagem' : 'Editar mensagem' }),
+    el('div', { class: 'bd' },
+      el('label', { class: 'f', for: 'm-nome', text: 'Nome' }), f.nome,
+      el('label', { class: 'f', for: 'm-tipo', text: 'Tipo' }), f.tipo,
+      el('label', { class: 'checks', style: 'margin-top:10px' }, f.ativo, ' Ativa'),
+      el('label', { class: 'f', text: 'Grupos' }),
+      el('div', { class: 'checks' }, f.grupos.map((x) => el('label', {}, x.cb, ' ' + x.g.apelido + (x.g.teste ? ' (teste)' : '')))),
+      el('label', { class: 'f', for: 'm-horarios', text: 'Horários (separe por vírgula)' }), f.horarios,
+      el('label', { class: 'f', text: 'Dias da semana' }),
+      el('div', { class: 'checks' }, f.dias.map((x) => el('label', {}, x.cb, ' ' + DIA_LABEL[x.d]))),
+      el('div', { class: 'row', style: 'margin-top:8px' },
+        el('button', { type: 'button', text: 'Todos', onclick: preset(TODOS) }),
+        el('button', { type: 'button', text: 'Dias úteis', onclick: preset(['seg', 'ter', 'qua', 'qui', 'sex']) }),
+        el('button', { type: 'button', text: 'Fim de semana', onclick: preset(['sab', 'dom']) })),
+      el('label', { class: 'f', for: 'm-data', text: 'Ou enviar uma única vez em uma data (ignora os dias)' }), f.data,
+      sMsg, sEnq, sAcao, testar, erro),
+    el('div', { class: 'ft' },
+      novo ? null : el('button', { type: 'button', class: 'danger', text: 'Excluir', onclick: apagar }),
+      el('span', { class: 'grow' }),
+      el('button', { type: 'button', text: 'Cancelar', onclick: () => dlg.close() }),
+      el('button', { class: 'primary', type: 'submit', text: 'Salvar' }))));
+  dlg.showModal();
+}
+
+/* ---- Imagens ---- */
+async function dialogoImagens() {
+  const area = el('div', { class: 'imgs' });
+  const info = el('div', { class: 'muted small' });
+  const pintar = async () => {
+    area.replaceChildren();
+    for (const i of S.imgs) {
+      const img = el('img', { alt: i.name, loading: 'lazy' });
+      sb.storage.from(BUCKET).createSignedUrl(i.name, 3600).then(({ data }) => { if (data) img.src = data.signedUrl; });
+      area.append(el('figure', {}, img, el('figcaption', {}, i.name, ' ',
+        el('button', { class: 'danger small', text: 'excluir', onclick: async () => {
+          if (!confirm('Excluir ' + i.name + '?')) return;
+          await sb.storage.from(BUCKET).remove([i.name]); await carregarTudo(); pintar();
+        } }))));
+    }
+    info.textContent = `${S.imgs.length} imagem(ns)`;
+  };
+  const input = el('input', { type: 'file', accept: 'image/png,image/jpeg,image/webp', multiple: true, id: 'up' });
+  input.addEventListener('change', async () => {
+    const files = [...input.files]; let ok = 0;
+    for (const file of files) {
+      info.textContent = `Enviando ${ok + 1} de ${files.length}…`;
+      const nome = file.name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9._ -]/g, '_');
+      const r = await sb.storage.from(BUCKET).upload(nome, file, { upsert: true, contentType: file.type });
+      if (r.error) { info.textContent = 'Erro em ' + nome + ': ' + r.error.message; return; }
+      ok++;
+    }
+    await carregarTudo(); await pintar(); renderConteudo();
+  });
+  dlg.replaceChildren(el('div', {},
+    el('div', { class: 'hd', text: 'Imagens' }),
+    el('div', { class: 'bd' },
+      el('label', { class: 'f', for: 'up', text: 'Enviar imagens (pode escolher várias de uma vez)' }), input, info, el('div', { style: 'height:10px' }), area),
+    el('div', { class: 'ft' }, el('button', { class: 'primary', text: 'Fechar', onclick: () => dlg.close() }))));
+  dlg.showModal(); pintar();
+}
+
+/* ---- exportar para o formato do enviador atual ---- */
+function exportarConfig() {
+  const aliases = Object.fromEntries(S.grupos.map((g) => [g.apelido, g.nome_whatsapp]));
+  const mensagens = S.msgs.map((m) => {
+    const o = { nome: m.nome, grupos: m.grupos, horarios: m.horarios, dias: m.dias };
+    if (m.data) { o.data = m.data; delete o.dias; }
+    if (!m.ativo) o.ativo = false;
+    if (m.tipo === 'acao') o.acao = m.acao;
+    else if (m.tipo === 'enquete') o.enquete = m.enquete;
+    else { if (m.imagem) o.imagem = m.imagem; o.textos = m.textos; if (m.ordem !== 'aleatoria') o.ordem = m.ordem; }
+    return o;
+  });
+  const blob = new Blob([JSON.stringify({ fusoHorario: 'America/Sao_Paulo', toleranciaMinutos: 10, grupos: aliases, mensagens }, null, 2)], { type: 'application/json' });
+  const a = el('a', { href: URL.createObjectURL(blob), download: 'config.json' });
+  document.body.append(a); a.click(); a.remove();
+}
+
+/* ---- Grupos ---- */
+function telaGrupos() {
+  const nome = el('input', { type: 'text', placeholder: 'Nome exato no WhatsApp' });
+  const apelido = el('input', { type: 'text', placeholder: 'Apelido (ex.: vendas)' });
+  const teste = el('input', { type: 'checkbox' });
+  const erro = el('div', { class: 'notice bad', hidden: true });
+  return el('div', {},
+    el('p', { class: 'muted', text: 'O apelido é o que aparece nas mensagens. O nome precisa ser idêntico ao do grupo no WhatsApp. Grupos de teste liberam o botão "Enviar agora".' }),
+    el('div', { class: 'list' }, S.grupos.map((g) => el('div', { class: 'card item' },
+      el('div', {}, el('h3', { text: g.apelido }), el('div', { class: 'small', text: g.nome_whatsapp }),
+        el('div', { class: 'badges' }, g.teste ? el('span', { class: 'badge warn', text: 'teste' }) : el('span', { class: 'badge ok', text: 'produção' }),
+          g.jid ? el('span', { class: 'badge', text: 'encontrado no WhatsApp' }) : el('span', { class: 'badge warn', text: 'ainda não verificado' }))),
+      el('div', { class: 'actions' },
+        el('button', { class: 'danger', text: 'Remover', onclick: async () => {
+          const usado = S.msgs.filter((m) => (m.grupos || []).includes(g.apelido)).length;
+          if (!confirm(usado ? `${usado} mensagem(ns) usam este grupo. Remover mesmo assim?` : 'Remover este grupo?')) return;
+          await sb.from('wpp_grupos').delete().eq('id', g.id); await carregarTudo(); renderConteudo();
+        } }))))),
+    el('h2', { text: 'Adicionar grupo' }),
+    el('div', { class: 'card' }, apelido, el('div', { style: 'height:8px' }), nome,
+      el('label', { class: 'checks', style: 'margin-top:8px' }, teste, ' É um grupo de teste'), erro,
+      el('div', { style: 'margin-top:10px' }, el('button', { class: 'primary', text: 'Adicionar', onclick: async () => {
+        erro.hidden = true;
+        const a = apelido.value.trim().toLowerCase().replace(/\s+/g, '-');
+        if (!a || !nome.value.trim()) { erro.textContent = 'Preencha o apelido e o nome.'; erro.hidden = false; return; }
+        const r = await sb.from('wpp_grupos').insert({ apelido: a, nome_whatsapp: nome.value.trim(), teste: teste.checked });
+        if (r.error) { erro.textContent = r.error.message.includes('duplicate') ? 'Esse apelido já existe.' : r.error.message; erro.hidden = false; return; }
+        await carregarTudo(); renderConteudo();
+      } }))));
+}
+
+/* ---- Histórico ---- */
+function telaHistorico() {
+  if (!S.envios.length) return el('p', { class: 'muted', text: 'Nenhum envio registrado ainda. O enviador grava aqui cada mensagem, enquete e ação.' });
+  return el('div', { class: 'scroll' }, el('table', {},
+    el('thead', {}, el('tr', {}, ['Quando', 'Mensagem', 'Grupo', 'Resultado'].map((t) => el('th', { text: t })))),
+    el('tbody', {}, S.envios.map((e) => el('tr', {},
+      el('td', { class: 'next', text: fmtFull(e.enviado_em) }), el('td', { text: e.mensagem }), el('td', { text: e.grupo || '—' }),
+      el('td', {}, el('span', { class: 'badge ' + (e.ok ? 'ok' : 'bad'), text: e.ok ? 'enviado' : 'erro' }), e.detalhe ? el('div', { class: 'muted small', text: e.detalhe }) : null))))));
+}
+
+/* ---- Conexão ---- */
+function telaConexao() {
+  const c = S.conexao || { status: 'desconectado' };
+  const online = enviadorOnline();
+  const tel = el('input', { type: 'tel', placeholder: '55DDDNUMERO (só números)', id: 'tel', inputmode: 'numeric' });
+  const st = el('div', { class: 'muted small' });
+  const enviar = async (tipo, payload) => {
+    const r = await sb.from('wpp_comandos').insert({ tipo, payload });
+    st.textContent = r.error ? r.error.message : 'Pedido enviado. Aguarde alguns segundos.';
+  };
+  const cor = c.status === 'conectado' ? 'ok' : c.status === 'erro' ? 'bad' : 'warn';
+  return el('div', {},
+    el('div', { class: 'card' },
+      el('div', { class: 'row' }, el('strong', { text: 'Status' }), el('span', { class: 'badge ' + cor, text: c.status.replace('_', ' ') }),
+        el('span', { class: 'badge ' + (online ? 'ok' : 'warn'), text: online ? 'enviador online' : 'enviador offline' })),
+      c.numero ? el('div', { class: 'small', text: 'Número: ' + c.numero }) : null,
+      c.detalhe ? el('div', { class: 'small muted', text: c.detalhe }) : null,
+      c.enviador_visto_em ? el('div', { class: 'small muted', text: 'Enviador visto em ' + fmtFull(c.enviador_visto_em) }) : null),
+    !online ? el('div', { class: 'notice', text: 'O enviador (programa que mantém o WhatsApp conectado) ainda não está ligado a este painel. Os pedidos ficam registrados e serão atendidos quando ele estiver online.' }) : null,
+    c.codigo_vinculacao ? el('div', { class: 'card', style: 'margin-top:12px' },
+      el('div', { class: 'muted small', text: 'Digite este código no WhatsApp: Aparelhos conectados → Conectar um aparelho → Conectar com número de telefone' }),
+      el('div', { style: 'margin-top:8px' }, el('span', { class: 'code', text: c.codigo_vinculacao }))) : null,
+    el('h2', { text: 'Conectar um número' }),
+    el('div', { class: 'card' },
+      el('label', { class: 'f', for: 'tel', text: 'Número do WhatsApp a conectar' }), tel,
+      el('div', { class: 'row', style: 'margin-top:10px' },
+        el('button', { class: 'primary', text: 'Gerar código de vinculação', onclick: () => {
+          const n = tel.value.replace(/\D/g, '');
+          if (n.length < 12) { st.textContent = 'Digite o número com 55 e DDD.'; return; }
+          enviar('vincular', { telefone: n });
+        } }),
+        el('button', { class: 'danger', text: 'Desconectar', onclick: () => { if (confirm('Desconectar o WhatsApp?')) enviar('desconectar', {}); } }),
+        el('button', { text: 'Atualizar lista de grupos', onclick: () => enviar('sincronizar_grupos', {}) })),
+      st),
+    el('p', { class: 'muted small', text: 'Dica: conecte uma única vez e evite repetir a vinculação sem necessidade. Muitas vinculações seguidas aumentam o risco de restrição do número.' }));
+}
+
+init();
+</script>
+</body>
+</html>
